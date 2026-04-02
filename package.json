@@ -27,11 +27,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/adityachauhan0/DeskDown.git"
+    "url": "https://github.com/adityachauhan0/deckdown.git"
   },
-  "homepage": "https://github.com/adityachauhan0/DeskDown#readme",
+  "homepage": "https://github.com/adityachauhan0/deckdown#readme",
   "bugs": {
-    "url": "https://github.com/adityachauhan0/DeskDown/issues"
+    "url": "https://github.com/adityachauhan0/deckdown/issues"
   },
   "files": [
     "LICENSE",
