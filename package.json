@@ -1,0 +1,37 @@
+{
+  "name": "deckdown",
+  "version": "1.0.0",
+  "description": "Local-first Markdown to PDF presentation compiler",
+  "main": "src/index.js",
+  "type": "module",
+  "bin": {
+    "deckdown": "./src/index.js"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
+    "test:watch": "npm test -- --watch"
+  },
+  "keywords": [
+    "presentation",
+    "markdown",
+    "pdf",
+    "slides",
+    "deckdown"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "commander": "^12.0.0",
+    "js-yaml": "^4.1.0",
+    "pdfkit": "^0.15.0",
+    "pptxgenjs": "^3.12.0",
+    "sharp": "^0.34.5",
+    "shiki": "^1.0.0"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
