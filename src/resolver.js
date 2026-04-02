@@ -2,7 +2,7 @@
 // Handles @import directive resolution
 
 import { readFileSync, existsSync } from 'fs';
-import { resolve, dirname, extname } from 'path';
+import { resolve, dirname, extname, isAbsolute } from 'path';
 
 export class Resolver {
   constructor(entryPath) {
@@ -15,7 +15,7 @@ export class Resolver {
   resolve(content, baseDir = this.entryDir) {
     const importRegex = /@import\[([^\]]+)\]/g;
     let match;
-    let resolved = content;
+    let resolved = this.resolveRelativeImagePaths(content, baseDir);
     
     // Track matches with their info for later replacement
     const matches = [];
@@ -59,6 +59,33 @@ export class Resolver {
     }
     
     return resolved;
+  }
+
+  resolveRelativeImagePaths(content, baseDir) {
+    const imageRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
+
+    return content.replace(imageRegex, (match, alt, target) => {
+      const trimmedTarget = target.trim();
+      const parts = trimmedTarget.match(/^<([^>]+)>(.*)$/) || trimmedTarget.match(/^([^\s]+)(.*)$/);
+
+      if (!parts) {
+        return match;
+      }
+
+      const imagePath = parts[1];
+      const suffix = parts[2] || '';
+
+      if (this.isExternalAsset(imagePath) || isAbsolute(imagePath)) {
+        return match;
+      }
+
+      const absolutePath = resolve(baseDir, imagePath);
+      return `![${alt}](${absolutePath}${suffix})`;
+    });
+  }
+
+  isExternalAsset(assetPath) {
+    return /^([a-zA-Z][a-zA-Z\d+.-]*:|\/\/)/.test(assetPath);
   }
 
   resolvePath(importPath, baseDir) {

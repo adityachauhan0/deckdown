@@ -1,4 +1,4 @@
-// Deckdown - CLI Entry Point
+// Deckdown - Compiler and CLI helpers
 
 import { Command } from 'commander';
 import { readFileSync } from 'fs';
@@ -11,30 +11,6 @@ import { layoutDocument } from './layout.js';
 import { renderPDF } from './renderer-pdf.js';
 import { renderPNG } from './renderer-png.js';
 import { renderPPTX } from './renderer-pptx.js';
-
-const program = new Command();
-
-program
-  .name('deckdown')
-  .description('Local-first Markdown to PDF presentation compiler')
-  .version('1.0.0')
-  .argument('<input>', 'Input Markdown file')
-  .option('-o, --output <file>', 'Output file (default: stdout)')
-  .option('-f, --format <format>', 'Output format: pdf, png, pptx (default: pdf)', 'pdf')
-  .option('--page-width <pixels>', 'Page width in pixels', '1920')
-  .option('--page-height <pixels>', 'Page height in pixels', '1080')
-  .option('--margin <pixels>', 'Page margin in pixels', '80')
-  .option('-w, --watch', 'Watch for changes and rebuild')
-  .action(async (input, options) => {
-    try {
-      await compile(input, options);
-    } catch (err) {
-      console.error(`Error: ${err.message}`);
-      process.exit(1);
-    }
-  });
-
-program.parse();
 
 function mergeConfig(base, override) {
   const result = { ...base };
@@ -109,4 +85,35 @@ async function compile(inputPath, options) {
   }
 }
 
-export { compile };
+function createProgram(version = '0.0.0') {
+  const program = new Command();
+
+  program
+    .name('deckdown')
+    .description('Local-first Markdown to PDF presentation compiler')
+    .version(version)
+    .argument('<input>', 'Input Markdown file')
+    .option('-o, --output <file>', 'Output file (default: stdout)')
+    .option('-f, --format <format>', 'Output format: pdf, png, pptx (default: pdf)', 'pdf')
+    .option('--page-width <pixels>', 'Page width in pixels', '1920')
+    .option('--page-height <pixels>', 'Page height in pixels', '1080')
+    .option('--margin <pixels>', 'Page margin in pixels', '80')
+    .option('-w, --watch', 'Watch for changes and rebuild')
+    .action(async (input, options) => {
+      try {
+        await compile(input, options);
+      } catch (err) {
+        console.error(`Error: ${err.message}`);
+        process.exit(1);
+      }
+    });
+
+  return program;
+}
+
+async function runCli(argv = process.argv, version = '0.0.0') {
+  const program = createProgram(version);
+  await program.parseAsync(argv);
+}
+
+export { compile, createProgram, mergeConfig, runCli };

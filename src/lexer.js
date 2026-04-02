@@ -30,13 +30,13 @@ export class Lexer {
 
       const char = this.input[this.pos];
       
-      if (char === '@' && this.peekWord() === 'import') {
+      if (this.input.startsWith('@import[', this.pos)) {
         this.tokens.push(this.readImport());
       } else if (this.input.startsWith('---', this.pos) && this.isLineStart()) {
         this.tokens.push(this.readSlideBreakOrFrontmatter());
-      } else if (char === '#') {
+      } else if (char === '#' && this.isLineStart()) {
         this.tokens.push(this.readHeading());
-      } else if (char === '`') {
+      } else if (this.input.startsWith('```', this.pos)) {
         this.tokens.push(this.readCodeBlock());
       } else if (char === '!' && this.input[this.pos + 1] === '[') {
         this.tokens.push(this.readImage());
@@ -215,8 +215,9 @@ export class Lexer {
       this.pos++;
     }
     this.skipWhitespace();
-    const text = this.readLine();
-    return { type: TokenType.HEADING, value: { level, text: text.trim() }, line: startLine };
+    const line = this.readLine();
+    const { text, attributes } = this.extractInlineAttributes(line.trim());
+    return { type: TokenType.HEADING, value: { level, text, attributes }, line: startLine };
   }
 
   readCodeBlock() {
@@ -284,19 +285,12 @@ export class Lexer {
     let text = '';
     while (this.pos < this.input.length) {
       const char = this.input[this.pos];
-      if (char === '\n' || char === '@' || char === '{' || char === '#') {
-        break;
-      }
-      if (char === '!') {
-        // Check if this is an image
-        if (this.input[this.pos + 1] === '[') {
-          break;
-        }
-        // Otherwise consume the standalone !
-        text += char;
-        this.pos++;
-        continue;
-      }
+      if (char === '\n') break;
+      if (char === '@' && this.input.startsWith('@import[', this.pos)) break;
+      if (char === '{' && this.input[this.pos + 1] === '{') break;
+      if (char === '#' && this.isLineStart()) break;
+      if (char === '`' && this.input.startsWith('```', this.pos)) break;
+      if (char === '!' && this.input[this.pos + 1] === '[') break;
       text += char;
       this.pos++;
     }
@@ -335,6 +329,19 @@ export class Lexer {
     }
     this.pos = start;
     return line;
+  }
+
+  extractInlineAttributes(text) {
+    const attributes = [];
+    const cleaned = text.replace(/{{\s*([^}]+?)\s*}}/g, (_, raw) => {
+      const normalized = raw.trim();
+      if (normalized) {
+        attributes.push(normalized);
+      }
+      return '';
+    }).trim();
+
+    return { text: cleaned, attributes };
   }
 }
 

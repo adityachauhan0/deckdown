@@ -106,6 +106,14 @@ describe('Lexer', () => {
       const tokens = tokenize('@import[theme.yml]');
       expect(tokens[0].type).toBe(TokenType.IMPORT);
       expect(tokens[0].value).toBe('theme.yml');
+      expect(tokens[1].type).toBe(TokenType.EOF);
+    });
+
+    test('tokenizes plain at-sign text without hanging', () => {
+      const tokens = tokenize('Email me @home');
+      expect(tokens[0].type).toBe(TokenType.TEXT);
+      expect(tokens[0].value).toBe('Email me @home');
+      expect(tokens[1].type).toBe(TokenType.EOF);
     });
   });
 

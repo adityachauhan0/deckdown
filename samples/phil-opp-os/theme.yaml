@@ -1,0 +1,23 @@
+page:
+  width: 1600
+  height: 900
+  margin: 68
+theme:
+  fonts:
+    heading: Arial
+    body: Helvetica
+    code: Courier
+  colors:
+    background: '#ffffff'
+    text: '#4b5563'
+    heading: '#2b2f90'
+    accent: '#2563eb'
+    codeBg: '#0f172a'
+  typography:
+    lineHeight: 1.5
+    headingScale: 2.45
+    bodySize: 22
+    codeSize: 18
+  spacing:
+    paragraph: 24
+    slidePadding: 52

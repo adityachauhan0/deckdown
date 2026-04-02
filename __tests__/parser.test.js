@@ -75,11 +75,12 @@ describe('Parser', () => {
     });
 
     test('parses block with attributes', () => {
-      const tokens = tokenize('{{ center }}\n# Title');
+      const tokens = tokenize('# Title {{ center middle }}');
       const doc = parse(tokens);
       expect(doc.slides[0].blocks[0].type).toBe('heading');
       expect(doc.slides[0].blocks[0].attributes).toBeDefined();
       expect(doc.slides[0].blocks[0].attributes).toContain('center');
+      expect(doc.slides[0].blocks[0].attributes).toContain('middle');
     });
 
     test('skips empty text tokens', () => {
@@ -90,19 +91,32 @@ describe('Parser', () => {
   });
 
   describe('Attributes', () => {
-    test('collects slide-level attributes', () => {
-      const tokens = tokenize('{{ center }}\n# Title');
+    test('attaches trailing attributes to the preceding block', () => {
+      const tokens = tokenize('# Title\n{{ center }}\nBody');
       const doc = parse(tokens);
-      // Attributes are now attached to blocks, not slide
       expect(doc.slides[0].attributes).toEqual([]);
       expect(doc.slides[0].blocks[0].attributes).toContain('center');
     });
 
-    test('parses multiple slide attributes', () => {
-      const tokens = tokenize('{{ center middle }}\n# Title');
+    test('keeps control attributes leading for the following block', () => {
+      const tokens = tokenize('{{ cols: 2 }}\n# Title');
       const doc = parse(tokens);
       expect(doc.slides[0].attributes).toEqual([]);
-      expect(doc.slides[0].blocks[0].attributes).toContain('center middle');
+      expect(doc.slides[0].blocks[0].attributes).toContain('cols: 2');
+    });
+
+    test('splits multiple standalone attributes', () => {
+      const tokens = tokenize('{{ center middle }}\n# Title');
+      const doc = parse(tokens);
+      expect(doc.slides[0].blocks[0].attributes).toContain('center');
+      expect(doc.slides[0].blocks[0].attributes).toContain('middle');
+    });
+
+    test('splits mixed key value and flag attributes', () => {
+      const tokens = tokenize('![Alt](image.png)\n{{ width: 72% center }}');
+      const doc = parse(tokens);
+      expect(doc.slides[0].blocks[0].attributes).toContain('width: 72%');
+      expect(doc.slides[0].blocks[0].attributes).toContain('center');
     });
   });
 });

@@ -1,10 +1,14 @@
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from 'fs';
-import { resolve } from 'path';
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, rmSync, existsSync } from 'fs';
+import { join } from 'path';
+import { tmpdir } from 'os';
 import { tokenize } from '../src/lexer.js';
 import { parse } from '../src/parser.js';
 import { resolveImports } from '../src/resolver.js';
 import { layoutDocument } from '../src/layout.js';
 import { renderPDF } from '../src/renderer-pdf.js';
+import { renderPNG } from '../src/renderer-png.js';
+import { renderPPTX } from '../src/renderer-pptx.js';
+import sharp from 'sharp';
 import yaml from 'js-yaml';
 
 function mergeConfig(base, override) {
@@ -25,7 +29,7 @@ describe('Full Pipeline', () => {
   afterAll(() => {
     tempFiles.forEach(f => {
       if (existsSync(f)) {
-        try { unlinkSync(f); } catch {}
+        try { rmSync(f, { recursive: true, force: true }); } catch {}
       }
     });
   });
@@ -147,6 +151,122 @@ describe('Full Pipeline', () => {
       
       expect(resolved).toBeDefined();
       expect(yamlImports.length).toBeGreaterThan(0);
+    });
+
+    test('resolves relative images inside imported markdown', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'deckdown-import-'));
+      tempFiles.push(tempDir);
+
+      const importsDir = join(tempDir, 'imports');
+      mkdirSync(importsDir);
+
+      const imagePath = join(importsDir, 'fixture.png');
+      writeFileSync(imagePath, Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+Xf9kAAAAASUVORK5CYII=',
+        'base64'
+      ));
+
+      const importedPath = join(importsDir, 'slide.md');
+      writeFileSync(importedPath, '# Imported Slide\n\n![Fixture](./fixture.png)\n');
+
+      const entryPath = join(tempDir, 'deck.md');
+      writeFileSync(entryPath, '@import[imports/slide.md]\n');
+
+      const { content: resolved } = resolveImports('@import[imports/slide.md]\n', entryPath);
+      expect(resolved).toContain(imagePath);
+
+      const tokens = tokenize(resolved);
+      const doc = parse(tokens);
+      const layout = layoutDocument(doc, {});
+      const imageBlock = layout.slides[0].blocks.find(block => block.type === 'image');
+
+      expect(imageBlock?.src).toBe(imagePath);
+
+      const pdfPath = join(tempDir, 'out.pdf');
+      const pngDir = join(tempDir, 'png-out');
+      tempFiles.push(pdfPath, pngDir);
+
+      await renderPDF(layout, pdfPath);
+      await renderPNG(layout, pngDir);
+
+      expect(existsSync(pdfPath)).toBe(true);
+      expect(existsSync(join(pngDir, 'slide-001.png'))).toBe(true);
+    });
+
+    test('renders a generated cover PNG and JPG through the real output paths', async () => {
+      const tempDir = mkdtempSync(join(tmpdir(), 'deckdown-images-'));
+      tempFiles.push(tempDir);
+
+      const assetsDir = join(tempDir, 'assets');
+      const slidesDir = join(tempDir, 'slides');
+      mkdirSync(assetsDir);
+      mkdirSync(slidesDir);
+
+      const pngPath = join(assetsDir, 'cover.png');
+      const jpgPath = join(assetsDir, 'cover.jpg');
+
+      await sharp({
+        create: {
+          width: 640,
+          height: 360,
+          channels: 4,
+          background: { r: 20, g: 30, b: 60, alpha: 1 }
+        }
+      }).png().toFile(pngPath);
+
+      await sharp({
+        create: {
+          width: 640,
+          height: 360,
+          channels: 4,
+          background: { r: 120, g: 224, b: 255, alpha: 1 }
+        }
+      }).jpeg({ quality: 90 }).toFile(jpgPath);
+
+      const importedPath = join(slidesDir, 'cover.md');
+      writeFileSync(
+        importedPath,
+        [
+          '# Generated Cover',
+          '',
+          '![PNG cover](../assets/cover.png)',
+          '',
+          '---',
+          '',
+          '# Generated JPEG',
+          '',
+          '![JPG cover](../assets/cover.jpg)'
+        ].join('\n')
+      );
+
+      const entryPath = join(tempDir, 'deck.md');
+      writeFileSync(entryPath, '@import[slides/cover.md]\n');
+
+      const { content: resolved } = resolveImports('@import[slides/cover.md]\n', entryPath);
+      expect(resolved).toContain(pngPath);
+      expect(resolved).toContain(jpgPath);
+
+      const tokens = tokenize(resolved);
+      const doc = parse(tokens);
+      const layout = layoutDocument(doc, {});
+
+      expect(layout.slides).toHaveLength(2);
+      expect(layout.slides[0].blocks.some(block => block.type === 'image' && block.src === pngPath)).toBe(true);
+      expect(layout.slides[1].blocks.some(block => block.type === 'image' && block.src === jpgPath)).toBe(true);
+
+      const pdfPath = join(tempDir, 'cover.pdf');
+      const pngDir = join(tempDir, 'cover-png');
+      const pptxPath = join(tempDir, 'cover.pptx');
+      tempFiles.push(pdfPath, pngDir, pptxPath);
+
+      await renderPDF(layout, pdfPath);
+      await renderPNG(layout, pngDir);
+      await renderPPTX(layout, pptxPath);
+
+      expect(existsSync(pdfPath)).toBe(true);
+      expect(existsSync(join(pngDir, 'slide-001.png'))).toBe(true);
+      expect(existsSync(join(pngDir, 'slide-002.png'))).toBe(true);
+      expect(existsSync(pptxPath)).toBe(true);
     });
   });
 });

@@ -1,15 +1,20 @@
 {
   "name": "deckdown",
   "version": "1.0.0",
-  "description": "Local-first Markdown to PDF presentation compiler",
-  "main": "src/index.js",
+  "description": "Local-first Markdown presentation compiler for PDF, PNG, and PPTX output",
+  "main": "./src/index.js",
   "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
   "bin": {
-    "deckdown": "./src/index.js"
+    "deckdown": "./src/cli.js"
   },
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js",
-    "test:watch": "npm test -- --watch"
+    "test:watch": "npm test -- --watch",
+    "release-check": "node scripts/release-check.js",
+    "prepublishOnly": "npm run release-check"
   },
   "keywords": [
     "presentation",
@@ -20,6 +25,19 @@
   ],
   "author": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/adityachauhan0/DeskDown.git"
+  },
+  "homepage": "https://github.com/adityachauhan0/DeskDown#readme",
+  "bugs": {
+    "url": "https://github.com/adityachauhan0/DeskDown/issues"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "src/"
+  ],
   "dependencies": {
     "commander": "^12.0.0",
     "js-yaml": "^4.1.0",

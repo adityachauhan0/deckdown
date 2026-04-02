@@ -4,6 +4,49 @@
 import { TokenType } from './lexer.js';
 import yaml from 'js-yaml';
 
+function expandAttributeTokens(value) {
+  const trimmed = value.trim();
+  if (!trimmed) return [];
+
+  const tokens = [];
+  let rest = trimmed;
+
+  while (rest.length > 0) {
+    const kvMatch = rest.match(/^(\w+):\s*([^\s]+)(?:\s+|$)/);
+    if (kvMatch) {
+      tokens.push(`${kvMatch[1]}: ${kvMatch[2]}`);
+      rest = rest.slice(kvMatch[0].length).trim();
+      continue;
+    }
+
+    const flagMatch = rest.match(/^([^\s]+)(?:\s+|$)/);
+    if (!flagMatch) {
+      break;
+    }
+
+    tokens.push(flagMatch[1]);
+    rest = rest.slice(flagMatch[0].length).trim();
+  }
+
+  return tokens;
+}
+
+function normalizeAttributes(values = []) {
+  return values.flatMap(value => expandAttributeTokens(value));
+}
+
+function isControlAttribute(value) {
+  const trimmed = value.trim();
+  return (
+    trimmed.startsWith('cols:') ||
+    trimmed === 'col: break' ||
+    trimmed.startsWith('grid:') ||
+    trimmed.startsWith('cell:') ||
+    trimmed === 'cover' ||
+    trimmed === 'contain'
+  );
+}
+
 export class Parser {
   constructor(tokens) {
     this.tokens = tokens;
@@ -26,6 +69,7 @@ export class Parser {
     // Handle slides
     let currentSlide = this.createSlide();
     let pendingAttributes = [];
+    let lastBlock = null;
     
     while (this.current().type !== TokenType.EOF) {
       const token = this.current();
@@ -35,33 +79,37 @@ export class Parser {
           document.slides.push(currentSlide);
           currentSlide = this.createSlide();
           pendingAttributes = [];
+          lastBlock = null;
           break;
           
         case TokenType.HEADING:
-          currentSlide.blocks.push({
+          currentSlide.blocks.push(this.createBlock({
             type: 'heading',
             ...token.value,
-            attributes: [...pendingAttributes]
-          });
+            attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+          }));
           pendingAttributes = [];
+          lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
           break;
           
         case TokenType.CODE_BLOCK:
-          currentSlide.blocks.push({
+          currentSlide.blocks.push(this.createBlock({
             type: 'code',
             ...token.value,
-            attributes: [...pendingAttributes]
-          });
+            attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+          }));
           pendingAttributes = [];
+          lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
           break;
           
         case TokenType.IMAGE:
-          currentSlide.blocks.push({
+          currentSlide.blocks.push(this.createBlock({
             type: 'image',
             ...token.value,
-            attributes: [...pendingAttributes]
-          });
+            attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+          }));
           pendingAttributes = [];
+          lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
           break;
           
         case TokenType.TEXT:
@@ -69,16 +117,24 @@ export class Parser {
           if (token.value.trim() === '') {
             break;
           }
-          currentSlide.blocks.push({
+          currentSlide.blocks.push(this.createBlock({
             type: 'paragraph',
             text: token.value,
-            attributes: [...pendingAttributes]
-          });
+            attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+          }));
           pendingAttributes = [];
+          lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
           break;
           
         case TokenType.ATTRIBUTE:
-          pendingAttributes.push(token.value);
+          const attrTokens = expandAttributeTokens(token.value);
+          for (const attr of attrTokens) {
+            if (lastBlock && pendingAttributes.length === 0 && !isControlAttribute(attr)) {
+              lastBlock.attributes.push(attr);
+            } else {
+              pendingAttributes.push(attr);
+            }
+          }
           break;
           
         case TokenType.IMPORT:
@@ -102,6 +158,13 @@ export class Parser {
       type: 'Slide',
       blocks: [],
       attributes: []
+    };
+  }
+
+  createBlock(block) {
+    return {
+      ...block,
+      attributes: block.attributes ? [...block.attributes] : []
     };
   }
 
