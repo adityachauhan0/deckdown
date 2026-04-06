@@ -28,10 +28,10 @@
 | PDF Output | PDFKit | PDF generation |
 | PNG Output | PDFKit + Ghostscript (`gs`) | PDF→PNG via Ghostscript |
 | PPTX Output | pptxgenjs | PowerPoint generation |
-| Syntax Highlighting | Shiki | Code block highlighting (not yet integrated) |
+| Syntax Highlighting | Shiki | Code block highlighting |
 | Testing | Jest | Unit and integration tests |
 
-**Note:** Shiki is installed but not yet integrated into the rendering pipeline.
+**Note:** Syntax highlighting is integrated into the rendering pipeline and used across PDF, PNG, and PPTX output.
 
 ---
 
@@ -155,7 +155,7 @@ Imports are resolved relative to the main file. Later imports override earlier o
 
 ## Current Status
 
-**Phase 1-6 COMPLETE** - All core functionality implemented and tested.
+**Phase 1-6 COMPLETE** - Core functionality is implemented and verified.
 
 ### What Works
 - Full pipeline: Markdown → Tokenize → Parse → Layout → Render (PDF/PNG/PPTX)
@@ -165,13 +165,13 @@ Imports are resolved relative to the main file. Later imports override earlier o
 - PDF output via PDFKit (generates valid PDF1.3 with magic byte verification)
 - PNG output via PDFKit + Ghostscript
 - PPTX output via pptxgenjs
-- 21 passing Jest tests (13 lexer, 13 parser, 8 integration)
+- 53 passing Jest tests across lexer, parser, CLI, layout/rendering, and integration coverage
+- Syntax-highlighted code blocks rendered through Shiki
+- Release verification via `npm run release-check` and packaging via `npm pack`
 
 ### Known Limitations
-- **Shiki not integrated** - Code blocks render as plain text, no syntax highlighting
 - **Ghostscript required** - PNG output requires `gs` command installed (no pure-JS fallback)
-- **Jest OOM** - Tests pass but Jest process crashes during cleanup (heap memory issue)
-- **`--watch` not implemented** - CLI flag exists but no file watching logic
+- **Fonts are mapped to built-ins** - PDF/PPTX output currently map theme fonts to bundled font families rather than embedding arbitrary fonts
 
 ---
 
@@ -190,9 +190,10 @@ deckdown/
 │   ├── renderer-pptx.js   # PPTX output (pptxgenjs)
 │   └── utils.js           # Utilities
 ├── __tests__/
-│   ├── lexer.test.js      # 13 tests
-│   ├── parser.test.js     # 13 tests
-│   └── integration.test.js # 8 tests
+│   ├── lexer.test.js      # tokenization coverage
+│   ├── parser.test.js     # parsing coverage
+│   ├── layout-rendering.test.js # highlighting and renderer coverage
+│   └── integration.test.js # pipeline and output coverage
 ├── samples/
 │   └── sample-deck.md     # Demo presentation
 ├── DeckDownVault/          # Obsidian vault (source of truth for design)
@@ -232,11 +233,12 @@ npm test  # Or: node --max-old-space-size=512 --experimental-vm-modules node_mod
 ```
 
 **Test suite:**
-- `lexer.test.js` - 13 tests covering tokens, slide breaks, frontmatter, attributes
-- `parser.test.js` - 13 tests covering document structure, slides, blocks, metadata
-- `integration.test.js` - 8 tests covering full pipeline, PDF rendering, page sizes, theme colors
+- `lexer.test.js` - tokenization, slide breaks, frontmatter, attributes, imports
+- `parser.test.js` - document structure, slides, blocks, metadata
+- `layout-rendering.test.js` - Shiki highlighting, layout, and PPTX rendering
+- `integration.test.js` - full pipeline, PDF/PNG/PPTX rendering, page sizes, theme colors, imports
 
-**Important:** All 21 tests pass. The OOM error that appears after "PASS" is a Jest cleanup issue, not a test failure.
+**Important:** The current suite passes cleanly with 53 tests.
 
 ---
 
@@ -261,50 +263,35 @@ The project uses an **Obsidian vault** as a "second brain" for design decisions.
 
 ### High Priority
 
-1. **Shiki Integration** (Phase 4遗留)
-   - Code blocks currently render without syntax highlighting
-   - Shiki is already in dependencies (`shiki` package)
-   - Need to integrate into `renderer-pdf.js` to highlight code before rendering
-   - See `Implementation-Roadmap.md` Phase 4 in vault
-
-2. **Error Handling & Validation**
+1. **Error Handling & Validation**
    - Validate frontmatter YAML structure
    - Handle missing import files gracefully (friendly error vs crash)
    - Validate inline attributes
    - Add helpful error messages with context
 
+2. **Font Strategy**
+   - Support bundled or embedded custom fonts instead of built-in family mapping
+   - Keep PDF and PPTX typography closer to the requested theme
+
 3. **Ghostscript Dependency**
    - PNG rendering requires `gs` command installed
-   - Add check at startup with friendly error if missing
    - Consider pure-JS alternative (e.g., `pdf2pic`) for zero dependencies
 
 ### Medium Priority
 
-4. **CLI Polish**
-   - Implement `--watch` mode for file watching + auto-rebuild
-   - Add `--verbose` flag for debugging output
-   - Add `--theme` option to override theme file
-
-5. **Sample Deck Enhancement**
-   - Expand `samples/sample-deck.md` to showcase all features
-   - Include examples of all attribute types
-   - Include code block examples (once Shiki integrated)
-
-6. **PNG Rendering Options**
+4. **PNG Rendering Options**
    - Support multiple PNG outputs (one per slide)
    - Add `--scale` option for output resolution
 
+5. **CI and Packaging**
+   - Set up GitHub Actions for `npm test` and `npm run release-check`
+   - Keep package smoke tests part of the release flow
+
 ### Lower Priority
 
-7. **Performance Optimization**
-   - Jest tests cause heap memory issues in CI (crashes after tests pass)
-   - Running with `--runInBand` and limited memory helps
-   - Profile and optimize if needed for CI
-
-8. **GitHub Actions CI**
-   - Set up CI to run tests
-   - Use memory-limited test command
-   - Add basic linting
+6. **Performance Optimization**
+   - Profile larger decks for rendering bottlenecks
+   - Optimize only after validation and release flow are stable
 
 ---
 
@@ -323,15 +310,14 @@ The project uses an **Obsidian vault** as a "second brain" for design decisions.
 
 ```bash
 # Basic usage
-node src/index.js <input.md> -o <output>
+node src/index.js <input.md> [-o <path>]
 
 # Options
--o, --output <file>      Output file
+-o, --output <path>      Output file or directory (required for PNG and PPTX)
 -f, --format <format>    Output format: pdf, png, pptx (default: pdf)
 --page-width <pixels>   Page width (default: 1920)
 --page-height <pixels>  Page height (default: 1080)
 --margin <pixels>       Page margin (default: 80)
--w, --watch             Watch for changes (not yet implemented)
 ```
 
 ---
@@ -340,7 +326,7 @@ node src/index.js <input.md> -o <output>
 
 When contributing:
 
-1. **Run tests first** - `npm test` should pass all 21 tests
+1. **Run tests first** - `npm test` should pass the full 53-test suite
 2. **Update vault** - Keep `DeckDownVault/Deckdown/` in sync with design changes
 3. **Test outputs** - Verify with magic byte checks (`%PDF-` for PDF, `\x89PNG` for PNG, `PK` for PPTX)
 4. **No new dependencies** - Avoid adding runtime dependencies unless necessary

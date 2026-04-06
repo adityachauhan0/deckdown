@@ -1,7 +1,8 @@
 // Deckdown - Compiler and CLI helpers
 
+import { spawnSync } from 'child_process';
 import { Command } from 'commander';
-import { readFileSync } from 'fs';
+import { existsSync, readFileSync, statSync } from 'fs';
 import { resolve } from 'path';
 import yaml from 'js-yaml';
 import { tokenize } from './lexer.js';
@@ -24,7 +25,55 @@ function mergeConfig(base, override) {
   return result;
 }
 
+function validateOutputTarget(format, output) {
+  if (format === 'png') {
+    if (!output) {
+      throw new Error('PNG output requires --output <directory>.');
+    }
+
+    if (existsSync(output) && !statSync(output).isDirectory()) {
+      throw new Error(`PNG output path must be a directory: ${output}`);
+    }
+
+    return;
+  }
+
+  if (format === 'pptx') {
+    if (!output) {
+      throw new Error('PPTX output requires --output <file>.');
+    }
+
+    if (existsSync(output) && statSync(output).isDirectory()) {
+      throw new Error(`PPTX output path must be a file: ${output}`);
+    }
+
+    return;
+  }
+
+  if (format === 'pdf' && output && existsSync(output) && statSync(output).isDirectory()) {
+    throw new Error(`PDF output path must be a file: ${output}`);
+  }
+}
+
+function ensureGhostscriptAvailable() {
+  const result = spawnSync('gs', ['--version'], {
+    encoding: 'utf8',
+    stdio: 'ignore'
+  });
+
+  if (result.status !== 0) {
+    throw new Error('PNG output requires Ghostscript (`gs`) on PATH.');
+  }
+}
+
 async function compile(inputPath, options) {
+  const format = (options.format || 'pdf').toLowerCase();
+  validateOutputTarget(format, options.output);
+
+  if (format === 'png') {
+    ensureGhostscriptAvailable();
+  }
+
   // Read input file
   const content = readFileSync(resolve(inputPath), 'utf-8');
   
@@ -64,14 +113,12 @@ async function compile(inputPath, options) {
   const layout = layoutDocument({ ...document, metadata }, layoutOptions);
   
   // Render based on format
-  const format = (options.format || 'pdf').toLowerCase();
-  
   switch (format) {
     case 'pdf':
       await renderPDF(layout, options.output);
       break;
     case 'png':
-      await renderPNG(layout, options.output || '.');
+      await renderPNG(layout, options.output);
       break;
     case 'pptx':
       await renderPPTX(layout, options.output);
@@ -93,12 +140,11 @@ function createProgram(version = '0.0.0') {
     .description('Local-first Markdown to PDF presentation compiler')
     .version(version)
     .argument('<input>', 'Input Markdown file')
-    .option('-o, --output <file>', 'Output file (default: stdout)')
+    .option('-o, --output <path>', 'Output file or directory (PNG and PPTX require this option)')
     .option('-f, --format <format>', 'Output format: pdf, png, pptx (default: pdf)', 'pdf')
     .option('--page-width <pixels>', 'Page width in pixels', '1920')
     .option('--page-height <pixels>', 'Page height in pixels', '1080')
     .option('--margin <pixels>', 'Page margin in pixels', '80')
-    .option('-w, --watch', 'Watch for changes and rebuild')
     .action(async (input, options) => {
       try {
         await compile(input, options);
@@ -116,4 +162,4 @@ async function runCli(argv = process.argv, version = '0.0.0') {
   await program.parseAsync(argv);
 }
 
-export { compile, createProgram, mergeConfig, runCli };
+export { compile, createProgram, ensureGhostscriptAvailable, mergeConfig, runCli, validateOutputTarget };

@@ -127,6 +127,8 @@ runStep('deckdown CLI help', nodeBin, [cliBin, '--help']);
 const testFiles = [
   '__tests__/lexer.test.js',
   '__tests__/parser.test.js',
+  '__tests__/cli.test.js',
+  '__tests__/layout-rendering.test.js',
   '__tests__/integration.test.js'
 ];
 

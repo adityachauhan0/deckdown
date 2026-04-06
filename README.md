@@ -1,21 +1,58 @@
 # DeckDown
 
-DeckDown is a local-first Markdown presentation compiler for teams that want one source deck and multiple deliverables. Write slides in Markdown, compose themes and shared slide fragments with `@import[...]`, and render the same deck to PDF, PNG, or PPTX.
+DeckDown is a local-first Markdown presentation compiler for teams that want one source deck and multiple deliverables. Write slides in Markdown, compose themes and slide fragments with `@import[...]`, and render the same deck to PDF, PNG, or PPTX.
 
-DeckDown is designed for repo-native presentation authoring:
-- Markdown input, not a browser editor
-- reusable themes and slide partials
+DeckDown is built for repo-native presentation authoring:
+- Markdown input instead of a browser editor
+- reusable themes and imported slide sections
 - deterministic local output
-- PDF, PNG, and PPTX from the same source
+- syntax-highlighted code across every output format
 - no cloud dependency in the render path
 
+## Why DeckDown
+
+Most presentation tools optimize for interactive editing. DeckDown optimizes for authors who want presentations to behave like source code:
+
+- keep decks in git
+- review changes as text
+- share theme files across multiple decks
+- generate multiple deliverables from the same source
+- run the full render path offline
+
+## Features
+
+- Markdown slides with YAML frontmatter
+- Recursive `@import[...]` for Markdown and YAML
+- Configurable page dimensions, colors, fonts, typography, and spacing
+- Layout attributes such as `center`, `middle`, `width`, `scale`, `cols`, `cover`, and `contain`
+- Shiki-powered syntax highlighting
+- PDF, PNG, and PPTX output from the same deck
+
+## Installation
+
+Use the path that matches how you plan to consume DeckDown.
+
+| Use case | Command |
+| --- | --- |
+| Install globally from npm | `npm install -g deckdown` |
+| Run without global install | `npx deckdown@latest --help` |
+| Install a locally packed release | `npm install -g ./dist/deckdown-<version>.tgz` |
+| Work on the repo locally | `npm install` |
+| Make the local checkout act like the published CLI | `npm link` |
+
+## Requirements
+
+DeckDown itself is a Node.js CLI. Some output and verification flows also depend on local system tools.
+
+| Task | Requirement |
+| --- | --- |
+| Run DeckDown | Node.js `>= 18` |
+| Generate PDF | no extra system dependency |
+| Generate PPTX | no extra system dependency |
+| Generate PNG | Ghostscript (`gs`) on `PATH` |
+| Run `npm run release-check` | `gs`, `pdftoppm`, and LibreOffice `soffice` |
+
 ## Quick Start
-
-Install the CLI:
-
-```bash
-npm install -g deckdown
-```
 
 Create `deck.md`:
 
@@ -26,8 +63,9 @@ theme:
   colors:
     background: '#ffffff'
     text: '#111827'
-    heading: '#1d4ed8'
+    heading: '#0f172a'
     accent: '#2563eb'
+    codeBg: '#f8fafc'
 ---
 
 # Product Review
@@ -51,45 +89,29 @@ deckdown deck.md -o deck.pptx --format pptx
 deckdown deck.md -o slides --format png
 ```
 
-More examples live in [samples/](./samples).
-
-## Installation
-
-Use the path that matches how you plan to consume DeckDown.
-
-| Use case | Command |
-| --- | --- |
-| Global CLI from npm | `npm install -g deckdown` |
-| One-off usage from a published package | `npx deckdown@latest --help` |
-| Install the local release artifact | `npm install -g ./dist/deckdown-1.0.0.tgz` |
-| Work on the repo locally | `npm install` |
-| Make the repo checkout behave like the published CLI | `npm link` |
-
-## Requirements
-
-DeckDown itself is a Node.js CLI. Some output or verification flows also depend on local system tools.
-
-| Task | Requirement |
-| --- | --- |
-| Run DeckDown | Node.js `>= 18` |
-| Generate PDF | no extra system dependency |
-| Generate PPTX | no extra system dependency |
-| Generate PNG | Ghostscript (`gs`) on `PATH` |
-| Run `npm run release-check` | `gs`, `pdftoppm`, and LibreOffice `soffice` |
+Reference decks live in [samples/](./samples).
 
 ## CLI Usage
 
 Basic form:
 
 ```bash
-deckdown <input> -o <output> [--format pdf|png|pptx]
+deckdown <input> [-o <path>] [--format pdf|png|pptx]
 ```
+
+Output behavior:
+- PDF can write to a file or to stdout when `-o` is omitted
+- PNG requires `-o` and writes one image per slide into that directory
+- PPTX requires `-o` and writes a single `.pptx` file
 
 Common commands:
 
 ```bash
-# PDF
+# PDF file
 deckdown deck.md -o deck.pdf
+
+# PDF to stdout
+deckdown deck.md > deck.pdf
 
 # PPTX
 deckdown deck.md -o deck.pptx --format pptx
@@ -140,6 +162,9 @@ theme:
     headingScale: 2.2
     bodySize: 22
     codeSize: 18
+  spacing:
+    paragraph: 24
+    slidePadding: 60
 ---
 ```
 
@@ -165,7 +190,7 @@ Attach layout attributes with `{{ ... }}`:
 # Centered Title {{ center }}
 
 ![Architecture](./diagram.png)
-{{ width: 72% center }}
+{{ width: 72% center contain height: 430 }}
 
 {{ cols: 2 }}
 ### Left Column
@@ -178,7 +203,7 @@ Content for the first column.
 Content for the second column.
 ```
 
-Available built-in attributes:
+Supported built-in attributes:
 
 | Attribute | Effect |
 | --- | --- |
@@ -192,6 +217,7 @@ Available built-in attributes:
 | `{{ col: break }}` | Move to the next column |
 | `{{ cover }}` | Render an image as cover within its block bounds |
 | `{{ contain }}` | Render an image contained within its block bounds |
+| `{{ height: N }}` | Set an explicit image height |
 
 ### Imports
 
@@ -205,17 +231,40 @@ Use `@import[...]` to compose decks from reusable files:
 
 Imports are resolved recursively. YAML imports are merged before document frontmatter, and document metadata wins on conflicts.
 
-## Output Formats
+## Code Highlighting
 
-DeckDown supports three output targets from the same Markdown source:
+Fenced code blocks with a language identifier are highlighted with Shiki and carried through PDF, PNG, and PPTX output.
+
+````markdown
+```javascript
+const outputs = ['pdf', 'png', 'pptx'];
+```
+````
+
+## Images
+
+DeckDown currently expects local image paths.
+
+```markdown
+![Diagram](./diagram.png)
+
+![Hero](./cover.png)
+{{ width: 86% center contain height: 430 }}
+```
+
+## Output Formats
 
 | Format | Output | Notes |
 | --- | --- | --- |
-| PDF | single file | best for review, export, and archival |
+| PDF | single file or stdout | best for review, export, and archival |
 | PNG | directory of slide images | useful for visual QA and diffs |
 | PPTX | single file | useful for handoff into presentation tooling |
 
-Syntax-highlighted code is rendered across PDF, PNG, and PPTX using the same layout pipeline.
+## Current Limitations
+
+- PNG output requires Ghostscript (`gs`) on `PATH`
+- Images currently use local file paths
+- Watch mode is not implemented yet
 
 ## Examples
 
@@ -261,7 +310,7 @@ Create a publishable tarball locally:
 npm pack --pack-destination dist
 ```
 
-That produces the npm-installable artifact at [dist/deckdown-1.0.0.tgz](./dist/deckdown-1.0.0.tgz).
+That produces an npm-installable artifact in [dist/](./dist).
 
 ## License
 

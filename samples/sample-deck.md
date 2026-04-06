@@ -1,5 +1,7 @@
+@import[./phil-opp-os/theme.yaml]
+
 ---
-title: Deckdown Sample Presentation
+title: DeckDown Sample Presentation
 page:
   width: 1920
   height: 1080
@@ -10,70 +12,82 @@ theme:
     body: Helvetica
     code: Courier
   colors:
-    background: '#1a1a2e'
-    text: '#eaeaea'
-    heading: '#ffffff'
-    accent: '#e94560'
-    codeBg: '#16213e'
+    background: '#0f172a'
+    text: '#e2e8f0'
+    heading: '#f8fafc'
+    accent: '#f97316'
+    codeBg: '#111827'
   typography:
-    lineHeight: 1.6
-    headingScale: 2.5
-    bodySize: 20
-    codeSize: 16
+    lineHeight: 1.55
+    headingScale: 2.4
+    bodySize: 22
+    codeSize: 18
   spacing:
     paragraph: 24
     slidePadding: 60
 ---
 
-# Deckdown
+# DeckDown
 
 {{ center middle }}
 
-Local-first Markdown to PDF presentations
+Author once. Ship to PDF, PNG, and PPTX.
 
 ---
 
-# Features
+# Why teams use it
 
-- **Predictable** — Same input always produces same output
-- **Distraction-free** — Focus on content, not design
-- **Local-first** — Works entirely offline
-- **Customizable** — Full theming support
+{{ cols: 2 }}
+
+## Repo-native authoring
+
+- Markdown instead of a browser editor
+- Shared slides and themes through imports
+- Version-control friendly review flow
+
+{{ col: break }}
+
+## Delivery without rework
+
+- PDF for review and archival
+- PNG for visual QA and diffs
+- PPTX for downstream handoff
 
 ---
 
-# Code Support
+# Highlighted code stays readable
 
 ```javascript
-function hello() {
-  console.log('Hello, Deckdown!');
+const outputs = ['pdf', 'png', 'pptx'];
+
+for (const format of outputs) {
+  console.log(`deckdown deck.md --format ${format}`);
 }
 ```
 
 {{ center }}
 
-Syntax highlighting with Shiki
+Shiki highlighting is rendered through the same layout pipeline in every output format.
 
 ---
 
-# Layout Options
+# Images and layout, no browser required
 
-{{ cols: 2 }}
-
-## Left Column
-
-Customizable layouts with columns support
-
-{{ col: break }}
-
-## Right Column
-
-And much more!
+![Deck hero](./phil-opp-os/assets/cover.png)
+{{ width: 86% center contain height: 430 }}
 
 ---
 
-# Thank You
+# Reuse content across decks
+
+The next slide is imported from another sample deck in this repository.
+
+---
+
+@import[./phil-opp-os/slides/06-value.md]
+
+# One source, multiple deliverables
 
 {{ center middle }}
 
-Questions?
+Write in Markdown, keep the repo as the source of truth, and export the format each audience needs.
