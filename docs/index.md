@@ -15,6 +15,8 @@ If you want the shortest path from install to first render, read:
 
 ```bash
 npm install -g deckdown@latest
+deckdown init .
+deckdown studio .
 deckdown deck.md -o deck.pdf
 deckdown deck.md -o deck.pptx --format pptx
 deckdown deck.md -o slides --format png

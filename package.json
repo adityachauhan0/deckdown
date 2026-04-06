@@ -1,6 +1,6 @@
 {
   "name": "deckdown",
-  "version": "1.0.0",
+  "version": "1.2.0",
   "description": "Markdown presentation engine for AI agents with deterministic PDF, PNG, and PPTX output",
   "main": "./src/index.js",
   "type": "module",

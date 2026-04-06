@@ -6,6 +6,8 @@ DeckDown is designed to behave like a straightforward build tool: one input, one
 
 ```bash
 deckdown <input> [-o <path>] [--format pdf|png|pptx]
+deckdown init [target]
+deckdown studio [target]
 ```
 
 ## Output Behavior
@@ -16,6 +18,18 @@ deckdown <input> [-o <path>] [--format pdf|png|pptx]
 - `--watch` is not implemented.
 
 ## Common Commands
+
+Scaffold a workspace:
+
+```bash
+deckdown init .
+```
+
+Launch Studio on the current repo:
+
+```bash
+deckdown studio .
+```
 
 PDF file:
 
@@ -56,6 +70,13 @@ deckdown deck.md -o deck.pdf --page-width 1600 --page-height 900 --margin 68
 | `--page-width <pixels>` | Page width override |
 | `--page-height <pixels>` | Page height override |
 | `--margin <pixels>` | Page margin override |
+
+## Subcommands
+
+| Command | Meaning |
+| --- | --- |
+| `deckdown init [target]` | Create a starter repo-first DeckDown workspace |
+| `deckdown studio [target]` | Launch the localhost Studio against a deck file or repo folder |
 
 ## Exit Conditions
 

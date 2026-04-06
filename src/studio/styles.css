@@ -1,0 +1,603 @@
+:root {
+  color-scheme: light;
+  --bg: #f5f3ee;
+  --panel: #ffffff;
+  --panel-soft: #fbfaf7;
+  --toolbar: #2f2c2a;
+  --toolbar-muted: rgba(255, 255, 255, 0.08);
+  --toolbar-line: rgba(255, 255, 255, 0.1);
+  --ink: #22242a;
+  --muted: #72757e;
+  --line: #ddd7ca;
+  --line-strong: #ccc4b5;
+  --accent: #245fd4;
+  --accent-soft: rgba(36, 95, 212, 0.1);
+  --warning: #8a4b0f;
+  --warning-bg: #fff2dd;
+  --error: #971c1c;
+  --error-bg: #ffe7e7;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background:
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 48%),
+    linear-gradient(180deg, #f1ede5 0%, #f6f4ee 100%);
+  color: var(--ink);
+}
+
+button,
+textarea,
+summary {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.studio-shell {
+  min-height: 100vh;
+}
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 18px;
+  padding: 10px 18px;
+  background: var(--toolbar);
+  border-bottom: 1px solid var(--toolbar-line);
+  color: #f6f4ef;
+}
+
+.topbar-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: nowrap;
+  overflow: visible;
+}
+
+.topbar-group-start {
+  align-content: center;
+}
+
+.topbar-actions {
+  justify-content: flex-end;
+}
+
+.brand-mark {
+  margin-right: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #9fc2ff;
+}
+
+.file-pill {
+  max-width: min(220px, 18vw);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 15px;
+  font-weight: 600;
+  color: #ffffff;
+}
+
+.toolbar-button,
+.primary-button,
+.file-button,
+.slide-tab,
+.diagnostic-action,
+.insert-item {
+  border: none;
+  border-radius: 10px;
+}
+
+.toolbar-button,
+.insert-item {
+  background: var(--toolbar-muted);
+  color: inherit;
+  padding: 8px 10px;
+}
+
+.toolbar-button:hover,
+.insert-item:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.toolbar-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.insert-menu summary.is-disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+.toolbar-icon {
+  min-width: 38px;
+  text-align: center;
+  font-weight: 700;
+}
+
+.toolbar-pill {
+  padding-inline: 12px;
+}
+
+.toolbar-button.has-issues {
+  color: #ffd29c;
+  background: rgba(255, 197, 107, 0.18);
+}
+
+.primary-button {
+  background: linear-gradient(135deg, var(--accent) 0%, #1c4aad 100%);
+  color: #ffffff;
+  padding: 10px 16px;
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  padding: 8px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #efede8;
+  font-size: 12px;
+}
+
+.status-pill.subtle {
+  color: #d3cec4;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.insert-menu {
+  position: relative;
+}
+
+.insert-menu summary {
+  list-style: none;
+}
+
+.insert-menu summary::-webkit-details-marker {
+  display: none;
+}
+
+.insert-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  display: none;
+  min-width: 180px;
+  padding: 8px;
+  background: #3a3734;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  box-shadow: 0 18px 36px rgba(17, 24, 39, 0.22);
+}
+
+.insert-menu[open] .insert-popover {
+  display: grid;
+  gap: 6px;
+}
+
+.insert-item {
+  width: 100%;
+  text-align: left;
+}
+
+.studio-layout {
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  min-height: calc(100vh - 61px);
+}
+
+.file-drawer {
+  position: sticky;
+  top: 61px;
+  align-self: start;
+  height: calc(100vh - 61px);
+  padding: 18px 14px 20px;
+  background: rgba(251, 250, 247, 0.94);
+  border-right: 1px solid var(--line);
+  overflow: auto;
+}
+
+.sidebar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.drawer-eyebrow {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.drawer-path {
+  margin: 0 0 14px;
+  color: var(--muted);
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.file-button {
+  width: 100%;
+  text-align: left;
+  padding: 10px 12px;
+  background: transparent;
+  color: var(--ink);
+  border: 1px solid transparent;
+}
+
+.file-button:hover {
+  background: rgba(36, 95, 212, 0.05);
+}
+
+.file-button.active {
+  border-color: rgba(36, 95, 212, 0.2);
+  background: rgba(36, 95, 212, 0.08);
+  color: var(--accent);
+}
+
+.drawer-backdrop {
+  display: none;
+}
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
+  min-width: 0;
+}
+
+.editor-pane,
+.preview-pane {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--panel-soft);
+}
+
+.editor-pane {
+  border-right: 1px solid var(--line);
+}
+
+.slide-tabs {
+  display: flex;
+  gap: 6px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 255, 0.7);
+  overflow: auto hidden;
+}
+
+.slide-tab {
+  min-width: 34px;
+  max-width: 180px;
+  padding: 7px 12px;
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slide-tab:hover {
+  border-color: var(--line-strong);
+}
+
+.slide-tab.active {
+  background: var(--accent-soft);
+  border-color: rgba(36, 95, 212, 0.26);
+  color: var(--accent);
+}
+
+#editor {
+  width: 100%;
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  padding: 22px 24px 36px;
+  background: rgba(255, 255, 255, 0.92);
+  color: var(--ink);
+  font: 15px/1.72 "IBM Plex Mono", monospace;
+}
+
+#editor::placeholder {
+  color: #9aa0ab;
+}
+
+.diagnostics {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 14px 0;
+}
+
+.diagnostics.is-hidden {
+  display: none;
+}
+
+.diagnostic {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.diagnostic.error {
+  background: var(--error-bg);
+  color: var(--error);
+}
+
+.diagnostic.warning {
+  background: var(--warning-bg);
+  color: var(--warning);
+}
+
+.diagnostic-copy {
+  min-width: 0;
+}
+
+.diagnostic-meta {
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.diagnostic-message {
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.diagnostic-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.diagnostic-action {
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.62);
+  color: inherit;
+}
+
+.slides {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px 18px 24px;
+  overflow: auto;
+}
+
+.slides.is-stale::before {
+  content: "Preview is stale. Fix the latest errors or retry to refresh.";
+  display: block;
+  margin-bottom: 4px;
+  color: var(--warning);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.slide-card {
+  padding: 10px 10px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.slide-card.active {
+  background: rgba(36, 95, 212, 0.04);
+}
+
+.slide-card.stale {
+  opacity: 0.72;
+}
+
+.slide-meta {
+  margin-bottom: 8px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.slide-surface {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid rgba(34, 36, 42, 0.08);
+  background: #ffffff;
+}
+
+.slide-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform-origin: top left;
+}
+
+.slide-block {
+  position: absolute;
+  overflow: hidden;
+  white-space: pre-wrap;
+}
+
+.slide-block.code {
+  border-radius: 12px;
+  padding: 12px;
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.slide-block.code pre {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.slide-block.image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.empty-state {
+  padding: 20px;
+  color: var(--muted);
+}
+
+.empty-workspace {
+  max-width: 480px;
+  margin: 80px auto;
+  padding: 28px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: 0 18px 36px rgba(34, 36, 42, 0.08);
+}
+
+.empty-workspace-eyebrow {
+  margin-bottom: 10px;
+  color: var(--accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.empty-workspace h2 {
+  margin: 0 0 10px;
+  font-family: "Space Grotesk", "IBM Plex Sans", sans-serif;
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.empty-workspace p {
+  margin: 0 0 18px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.mobile-only {
+  display: none;
+}
+
+@media (max-width: 1180px) {
+  .topbar {
+    grid-template-columns: 1fr;
+  }
+
+  .studio-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .file-drawer {
+    position: fixed;
+    top: 61px;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 84vw);
+    height: auto;
+    z-index: 30;
+    transform: translateX(-104%);
+    transition: transform 180ms ease;
+    box-shadow: 0 18px 40px rgba(17, 24, 39, 0.16);
+  }
+
+  .file-drawer.open {
+    transform: translateX(0);
+  }
+
+  .drawer-backdrop {
+    position: fixed;
+    inset: 61px 0 0;
+    z-index: 20;
+    background: rgba(17, 24, 39, 0.24);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 180ms ease;
+    display: block;
+  }
+
+  .drawer-backdrop.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .editor-pane {
+    border-right: none;
+    border-bottom: 1px solid var(--line);
+    min-height: 52vh;
+  }
+
+  .preview-pane {
+    min-height: 48vh;
+  }
+
+  .mobile-only {
+    display: inline-flex;
+  }
+}
+
+@media (max-width: 760px) {
+  .brand-mark {
+    display: none;
+  }
+
+  .file-pill {
+    max-width: 78vw;
+  }
+
+  .topbar {
+    padding-inline: 12px;
+  }
+
+  .slide-tabs,
+  .slides,
+  .diagnostics {
+    padding-inline: 12px;
+  }
+
+  #editor {
+    padding-inline: 16px;
+  }
+}

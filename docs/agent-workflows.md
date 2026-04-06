@@ -22,11 +22,18 @@ That combination makes DeckDown a good render layer in an agent workflow.
 
 ## Typical Flow
 
-1. Gather source material.
+1. Create or open a repo-first workspace.
+
+```bash
+deckdown init .
+deckdown studio .
+```
+
+2. Gather source material.
    Good inputs include docs, product notes, changelogs, RFCs, architecture docs, and metrics summaries.
-2. Have the agent draft `deck.md`.
-3. Move repeated or shared material into imported Markdown or YAML fragments.
-4. Render the deck with DeckDown.
+3. Have the agent draft `deck.md`.
+4. Move repeated or shared material into imported Markdown or YAML fragments.
+5. Render the deck with DeckDown.
 
 ```bash
 deckdown deck.md -o deck.pdf
@@ -34,8 +41,8 @@ deckdown deck.md -o deck.pptx --format pptx
 deckdown deck.md -o slides --format png
 ```
 
-5. Review the rendered output.
-6. Edit the Markdown and rerun the renderer until the deck is ready.
+6. Review the rendered output.
+7. Edit the Markdown and rerun the renderer until the deck is ready.
 
 ## Best Fit
 

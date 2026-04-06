@@ -42,6 +42,18 @@ Published package:
 
 <p align="center"><em>One Markdown deck can target PDF, PNG, and PPTX without changing tools.</em></p>
 
+<p align="center">
+  <img src="./docs/assets/showcase/studio-editor.png" alt="DeckDown Studio editing a deck locally with markdown on the left and slide preview on the right" width="100%" />
+</p>
+
+<p align="center"><em>DeckDown Studio keeps the workflow source-first: raw Markdown on the left, live slide review on the right.</em></p>
+
+<p align="center">
+  <img src="./docs/assets/showcase/studio-bootstrap.png" alt="DeckDown Studio first-run workspace bootstrap screen" width="100%" />
+</p>
+
+<p align="center"><em>Studio can also bootstrap a repo-first workspace locally when you start from an empty directory.</em></p>
+
 Showcase source:
 - [`samples/readme-showcase.md`](./samples/readme-showcase.md)
 - [`samples/readme-showcase-imports.md`](./samples/readme-showcase-imports.md)
@@ -64,7 +76,19 @@ deckdown samples/readme-showcase.md -o docs/assets/showcase --format png
 
 ## Quick Start
 
-Create `deck.md`:
+Scaffold a workspace:
+
+```bash
+deckdown init .
+```
+
+Open the localhost Studio:
+
+```bash
+deckdown studio .
+```
+
+Starter `deck.md`:
 
 ```markdown
 ---

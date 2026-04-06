@@ -128,6 +128,9 @@ const testFiles = [
   '__tests__/lexer.test.js',
   '__tests__/parser.test.js',
   '__tests__/cli.test.js',
+  '__tests__/workspace.test.js',
+  '__tests__/studio.test.js',
+  '__tests__/slide-labels.test.js',
   '__tests__/layout-rendering.test.js',
   '__tests__/integration.test.js'
 ];
@@ -201,6 +204,11 @@ if (npmPackResult.status === 0) {
     const packedPaths = new Set((packInfo.files || []).map(file => file.path));
     assertCondition('npm pack includes CLI entrypoint', packedPaths.has('src/cli.js'));
     assertCondition('npm pack includes compiler entrypoint', packedPaths.has('src/index.js'));
+    assertCondition('npm pack includes workspace scaffold', packedPaths.has('src/workspace.js'));
+    assertCondition('npm pack includes Studio server', packedPaths.has('src/studio/server.js'));
+    assertCondition('npm pack includes Studio app shell', packedPaths.has('src/studio/index.html'));
+    assertCondition('npm pack includes Studio client', packedPaths.has('src/studio/app.js'));
+    assertCondition('npm pack includes Studio styles', packedPaths.has('src/studio/styles.css'));
     assertCondition('npm pack excludes tests', !Array.from(packedPaths).some(file => file.startsWith('__tests__/')));
     assertCondition('npm pack excludes dist output', !Array.from(packedPaths).some(file => file.startsWith('dist/')));
     assertCondition('npm pack excludes samples', !Array.from(packedPaths).some(file => file.startsWith('samples/')));

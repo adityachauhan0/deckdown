@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>DeckDown Studio</title>
+    <link rel="stylesheet" href="/studio.css" />
+  </head>
+  <body>
+    <div class="studio-shell">
+      <header class="topbar">
+        <div class="topbar-group topbar-group-start">
+          <button id="files-toggle" class="toolbar-button toolbar-icon" type="button" title="Toggle files">▤</button>
+          <div class="brand-mark">DeckDown Studio</div>
+          <div id="editor-title" class="file-pill">Loading…</div>
+          <div id="slide-context" class="status-pill subtle">No slide</div>
+          <button data-snippet="# " class="toolbar-button toolbar-icon" type="button" title="Heading (# )">#</button>
+          <button data-wrap-prefix="**" data-wrap-suffix="**" data-wrap-fallback="bold text" class="toolbar-button toolbar-icon" type="button" title="Bold (**text**)">B</button>
+          <button data-wrap-prefix="_" data-wrap-suffix="_" data-wrap-fallback="italic text" class="toolbar-button toolbar-icon" type="button" title="Italic (_text_)">I</button>
+          <button data-snippet="- " class="toolbar-button toolbar-icon" type="button" title="List (- )">•</button>
+          <button data-snippet="> " class="toolbar-button toolbar-icon" type="button" title="Quote (> )">"</button>
+          <button data-wrap-prefix="`" data-wrap-suffix="`" data-wrap-fallback="inline code" class="toolbar-button toolbar-icon" type="button" title="Inline code (`code`)">&lt;/&gt;</button>
+          <button data-snippet="[label](https://example.com)" class="toolbar-button toolbar-icon" type="button" title="Link ([label](url))">↗</button>
+          <button data-snippet="![Alt text](./assets/image.png)\n{{ width: 72% center contain height: 430 }}\n" class="toolbar-button toolbar-icon" type="button" title="Image (![]())">◫</button>
+
+          <details class="insert-menu">
+            <summary class="toolbar-button toolbar-pill" title="Insert DeckDown blocks">Insert</summary>
+            <div class="insert-popover">
+              <button data-snippet="\n---\n" class="insert-item" type="button" title="Slide break (---)">Slide break</button>
+              <button data-snippet="\n---\n# Title Slide\n\n{{ center middle }}\n\nSubtitle\n" class="insert-item" type="button" title="Title slide">Title slide</button>
+              <button data-snippet="\n{{ cols: 2 }}\n## Left\n\nContent\n\n{{ col: break }}\n## Right\n\nContent\n" class="insert-item" type="button" title="Two-column layout">Two columns</button>
+            </div>
+          </details>
+        </div>
+
+        <div class="topbar-group topbar-actions">
+          <button id="export-pdf" class="toolbar-button toolbar-pill" type="button" title="Export PDF">PDF</button>
+          <button id="export-png" class="toolbar-button toolbar-pill" type="button" title="Export PNG">PNG</button>
+          <button id="export-pptx" class="toolbar-button toolbar-pill" type="button" title="Export PPTX">PPTX</button>
+          <button id="zoom-out" class="toolbar-button toolbar-icon" type="button" title="Zoom out">−</button>
+          <button id="zoom-reset" class="toolbar-button toolbar-pill" type="button" title="Fit preview">Fit</button>
+          <button id="zoom-in" class="toolbar-button toolbar-icon" type="button" title="Zoom in">+</button>
+          <button id="diagnostics-toggle" class="toolbar-button toolbar-pill" type="button" title="Toggle diagnostics">Issues <span id="diagnostic-count">0/0</span></button>
+          <button id="refresh-button" class="toolbar-button toolbar-icon" type="button" title="Refresh preview">↻</button>
+          <span id="save-status" class="status-pill">Saved</span>
+          <span id="export-status" class="status-pill subtle">Ready</span>
+          <button id="save-button" class="primary-button" type="button">Save</button>
+        </div>
+      </header>
+
+      <div class="studio-layout">
+        <aside id="file-drawer" class="file-drawer">
+          <div class="sidebar-header">
+            <div class="drawer-eyebrow">Workspace</div>
+            <button id="files-close" class="toolbar-button toolbar-icon mobile-only" type="button" title="Close files">×</button>
+          </div>
+          <p id="project-root" class="drawer-path"></p>
+          <div id="file-list" class="file-list"></div>
+        </aside>
+
+        <div id="drawer-backdrop" class="drawer-backdrop"></div>
+
+        <main class="workspace">
+          <section class="editor-pane">
+            <div id="slide-tabs" class="slide-tabs"></div>
+            <textarea
+              id="editor"
+              spellcheck="false"
+              placeholder="# Start here&#10;&#10;Write markdown on the left. Use the toolbar for syntax hints and DeckDown inserts.&#10;&#10;---&#10;&#10;Add a slide break when you want the next slide."
+            ></textarea>
+          </section>
+
+          <section class="preview-pane">
+            <div id="diagnostics" class="diagnostics is-hidden"></div>
+            <div id="slides" class="slides"></div>
+          </section>
+        </main>
+      </div>
+    </div>
+
+    <script type="module" src="/studio.js"></script>
+  </body>
+</html>

@@ -48,9 +48,11 @@ function isControlAttribute(value) {
 }
 
 export class Parser {
-  constructor(tokens) {
+  constructor(tokens, options = {}) {
     this.tokens = tokens;
     this.pos = 0;
+    this.diagnostics = options.diagnostics || [];
+    this.filePath = options.filePath || null;
   }
 
   parse() {
@@ -172,7 +174,15 @@ export class Parser {
     try {
       return yaml.load(content) || {};
     } catch (err) {
-      console.error(`Warning: Failed to parse YAML frontmatter: ${err.message}`);
+      this.diagnostics.push({
+        severity: 'warning',
+        source: 'frontmatter',
+        filePath: this.filePath,
+        code: 'frontmatter.parse_failed',
+        line: 1,
+        column: 1,
+        message: `Failed to parse YAML frontmatter: ${err.message}`
+      });
       return {};
     }
   }
@@ -187,7 +197,7 @@ export class Parser {
   }
 }
 
-export function parse(tokens) {
-  const parser = new Parser(tokens);
+export function parse(tokens, options = {}) {
+  const parser = new Parser(tokens, options);
   return parser.parse();
 }

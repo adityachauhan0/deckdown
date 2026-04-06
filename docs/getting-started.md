@@ -40,9 +40,21 @@ The release check also uses:
 - `pdftoppm`
 - LibreOffice `soffice`
 
-## First Deck
+## First Workspace
 
-Create `deck.md`:
+Scaffold a local workspace:
+
+```bash
+deckdown init .
+```
+
+Open the localhost editor:
+
+```bash
+deckdown studio .
+```
+
+Starter `deck.md`:
 
 ```markdown
 ---
