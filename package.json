@@ -1,7 +1,7 @@
 {
   "name": "deckdown",
   "version": "1.0.0",
-  "description": "Local-first Markdown presentation compiler for PDF, PNG, and PPTX output",
+  "description": "AI-agent-ready Markdown presentation compiler for deterministic PDF, PNG, and PPTX output",
   "main": "./src/index.js",
   "type": "module",
   "exports": {
@@ -17,10 +17,24 @@
     "prepublishOnly": "npm run release-check"
   },
   "keywords": [
+    "ai-agents",
+    "ai-presentation",
+    "presentation-generator",
     "presentation",
     "markdown",
+    "pptx",
+    "png",
     "pdf",
     "slides",
+    "powerpoint",
+    "powerpoint-automation",
+    "powerpoint-generation",
+    "markdown-to-pptx",
+    "slides-as-code",
+    "docs-as-code",
+    "local-first",
+    "developer-tools",
+    "agentic-workflows",
     "deckdown"
   ],
   "author": "",

@@ -1,6 +1,8 @@
 # DeckDown
 
-DeckDown is a local-first Markdown presentation compiler for teams that want one source deck and multiple deliverables. Write slides in Markdown, compose themes and slide fragments with `@import[...]`, and render the same deck to PDF, PNG, or PPTX.
+> AI-agent-ready presentation generator and PowerPoint automation CLI for Markdown, PDF, PNG, and PPTX.
+
+DeckDown is an AI-agent-ready Markdown presentation compiler for teams that want one source deck and multiple deliverables. Give an AI agent a prompt, docs, notes, or repo context, let it write slides in Markdown, and render the same deck to PDF, PNG, or PPTX locally.
 
 DeckDown is built for repo-native presentation authoring:
 - Markdown input instead of a browser editor
@@ -8,6 +10,17 @@ DeckDown is built for repo-native presentation authoring:
 - deterministic local output
 - syntax-highlighted code across every output format
 - no cloud dependency in the render path
+
+## Built For AI Agents
+
+DeckDown gives AI agents a practical way to create presentations for you without fighting a GUI:
+
+- agents can generate Markdown reliably
+- imports and themes keep output consistent across decks
+- deterministic rendering makes review and automation easier
+- local PDF, PNG, and PPTX export gives agents a real delivery target
+
+If you want an AI agent to turn docs, changelogs, product notes, metrics, or codebase context into slides, DeckDown gives it a clean interface: write Markdown, run a CLI, ship a deck.
 
 ## Why DeckDown
 
@@ -21,12 +34,14 @@ Most presentation tools optimize for interactive editing. DeckDown optimizes for
 
 ## Features
 
+- AI-agent-ready presentation generation workflow
 - Markdown slides with YAML frontmatter
 - Recursive `@import[...]` for Markdown and YAML
 - Configurable page dimensions, colors, fonts, typography, and spacing
 - Layout attributes such as `center`, `middle`, `width`, `scale`, `cols`, `cover`, and `contain`
 - Shiki-powered syntax highlighting
 - PDF, PNG, and PPTX output from the same deck
+- PowerPoint automation through a local CLI render path
 
 ## Installation
 
@@ -90,6 +105,14 @@ deckdown deck.md -o slides --format png
 ```
 
 Reference decks live in [samples/](./samples).
+
+## What To Use It For
+
+- Generate executive update decks from product docs or issue trackers
+- Turn engineering notes into architecture presentations
+- Let AI agents create slide drafts from a repo or knowledge base
+- Produce PPTX handoff files from Markdown source
+- Export PNG slides for visual QA or automated review workflows
 
 ## CLI Usage
 
@@ -265,6 +288,15 @@ DeckDown currently expects local image paths.
 - PNG output requires Ghostscript (`gs`) on `PATH`
 - Images currently use local file paths
 - Watch mode is not implemented yet
+
+## Why This Is Different From Browser AI Slide Tools
+
+DeckDown is not another hosted slide editor with AI bolted on. It is a local-first presentation compiler that AI agents can drive programmatically:
+
+- no browser automation required
+- no proprietary deck format in the render path
+- no cloud lock-in for compilation
+- better fit for agent workflows, CI, and docs-as-code teams
 
 ## Examples
 
