@@ -1,8 +1,8 @@
 # DeckDown
 
-> AI-agent-ready presentation generator and PowerPoint automation CLI for Markdown, PDF, PNG, and PPTX.
+> Markdown presentation engine for AI agents and PowerPoint automation from Markdown.
 
-DeckDown is an AI-agent-ready Markdown presentation compiler for teams that want one source deck and multiple deliverables. Give an AI agent a prompt, docs, notes, or repo context, let it write slides in Markdown, and render the same deck to PDF, PNG, or PPTX locally.
+DeckDown is a local-first Markdown presentation compiler that AI agents can use as a reliable render engine. Write slides in Markdown, compose themes and slide fragments with `@import[...]`, and render the same deck to PDF, PNG, or PPTX locally.
 
 DeckDown is built for repo-native presentation authoring:
 - Markdown input instead of a browser editor
@@ -13,7 +13,7 @@ DeckDown is built for repo-native presentation authoring:
 
 ## Built For AI Agents
 
-DeckDown gives AI agents a practical way to create presentations for you without fighting a GUI:
+DeckDown is not an AI presentation generator. It is the execution layer AI agents can use when they need to turn structured Markdown into real presentation files:
 
 - agents can generate Markdown reliably
 - imports and themes keep output consistent across decks
@@ -34,7 +34,7 @@ Most presentation tools optimize for interactive editing. DeckDown optimizes for
 
 ## Features
 
-- AI-agent-ready presentation generation workflow
+- Markdown presentation engine for AI-agent workflows
 - Markdown slides with YAML frontmatter
 - Recursive `@import[...]` for Markdown and YAML
 - Configurable page dimensions, colors, fonts, typography, and spacing
@@ -110,7 +110,7 @@ Reference decks live in [samples/](./samples).
 
 - Generate executive update decks from product docs or issue trackers
 - Turn engineering notes into architecture presentations
-- Let AI agents create slide drafts from a repo or knowledge base
+- Let AI agents compile Markdown slide drafts into deliverable decks
 - Produce PPTX handoff files from Markdown source
 - Export PNG slides for visual QA or automated review workflows
 
@@ -297,6 +297,7 @@ DeckDown is not another hosted slide editor with AI bolted on. It is a local-fir
 - no proprietary deck format in the render path
 - no cloud lock-in for compilation
 - better fit for agent workflows, CI, and docs-as-code teams
+- focused on rendering, not content generation
 
 ## Examples
 
