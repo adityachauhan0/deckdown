@@ -212,7 +212,7 @@ if (npmPackResult.status === 0) {
       if (packedPackage) {
         assertCondition(
           'packed bin points to src/cli.js',
-          packedPackage.bin?.deckdown === './src/cli.js'
+          packedPackage.bin?.deckdown === 'src/cli.js'
         );
         assertCondition(
           'packed exports point to src/index.js',
