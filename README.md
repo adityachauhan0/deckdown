@@ -1,71 +1,66 @@
 # DeckDown
 
-> Markdown presentation engine for AI agents and PowerPoint automation from Markdown.
+> Markdown presentation engine for AI agents with local PDF, PNG, and PPTX output.
 
-DeckDown is a local-first Markdown presentation compiler that AI agents can use as a reliable render engine. Write slides in Markdown, compose themes and slide fragments with `@import[...]`, and render the same deck to PDF, PNG, or PPTX locally.
+DeckDown is a local-first Markdown-to-presentation compiler for repo-native slide workflows. Write decks in Markdown, compose shared sections with imports, theme them with YAML, and render the same source to review-ready assets or handoff-ready PowerPoint files.
 
-DeckDown is built for repo-native presentation authoring:
-- Markdown input instead of a browser editor
-- reusable themes and imported slide sections
-- deterministic local output
-- syntax-highlighted code across every output format
-- no cloud dependency in the render path
+DeckDown is not an AI presentation generator. It is the render engine agents and humans can drive reliably.
 
-## Built For AI Agents
+## Install
 
-DeckDown is not an AI presentation generator. It is the execution layer AI agents can use when they need to turn structured Markdown into real presentation files:
+```bash
+npm install -g deckdown@latest
+```
 
-- agents can generate Markdown reliably
-- imports and themes keep output consistent across decks
-- deterministic rendering makes review and automation easier
-- local PDF, PNG, and PPTX export gives agents a real delivery target
+One-off use without a global install:
 
-If you want an AI agent to turn docs, changelogs, product notes, metrics, or codebase context into slides, DeckDown gives it a clean interface: write Markdown, run a CLI, ship a deck.
+```bash
+npx deckdown@latest --help
+```
 
-## Why DeckDown
+Published package:
+- npm: `https://www.npmjs.com/package/deckdown`
 
-Most presentation tools optimize for interactive editing. DeckDown optimizes for authors who want presentations to behave like source code:
+## Showcase
 
-- keep decks in git
-- review changes as text
-- share theme files across multiple decks
-- generate multiple deliverables from the same source
-- run the full render path offline
+<p align="center">
+  <img src="./docs/assets/showcase/slide-001.png" alt="DeckDown hero slide rendered to PNG" width="100%" />
+</p>
 
-## Features
+<p align="center"><em>Image-led hero slide from Markdown source.</em></p>
 
-- Markdown presentation engine for AI-agent workflows
-- Markdown slides with YAML frontmatter
-- Recursive `@import[...]` for Markdown and YAML
-- Configurable page dimensions, colors, fonts, typography, and spacing
-- Layout attributes such as `center`, `middle`, `width`, `scale`, `cols`, `cover`, and `contain`
-- Shiki-powered syntax highlighting
-- PDF, PNG, and PPTX output from the same deck
-- PowerPoint automation through a local CLI render path
+<p align="center">
+  <img src="./docs/assets/showcase/slide-002.png" alt="DeckDown shared themes and imported sections slide" width="49%" />
+  <img src="./docs/assets/showcase/slide-003.png" alt="DeckDown syntax-highlighted code slide" width="49%" />
+</p>
 
-## Installation
+<p align="center"><em>Reusable theme and import workflow on the left, Shiki-powered code rendering on the right.</em></p>
 
-Use the path that matches how you plan to consume DeckDown.
+<p align="center">
+  <img src="./docs/assets/showcase/slide-004.png" alt="DeckDown multi-output slide" width="100%" />
+</p>
 
-| Use case | Command |
+<p align="center"><em>One Markdown deck can target PDF, PNG, and PPTX without changing tools.</em></p>
+
+Showcase source:
+- [`samples/readme-showcase.md`](./samples/readme-showcase.md)
+- [`samples/readme-showcase-imports.md`](./samples/readme-showcase-imports.md)
+
+Rendered with:
+
+```bash
+deckdown samples/readme-showcase.md -o docs/assets/showcase --format png
+```
+
+## Documentation
+
+| Guide | Use it for |
 | --- | --- |
-| Install globally from npm | `npm install -g deckdown` |
-| Run without global install | `npx deckdown@latest --help` |
-| Install a locally packed release | `npm install -g ./dist/deckdown-<version>.tgz` |
-| Work on the repo locally | `npm install` |
-| Make the local checkout act like the published CLI | `npm link` |
-
-## Requirements
-
-DeckDown itself is a Node.js CLI. Some output and verification flows also depend on local system tools.
-
-| Task | Requirement |
-| --- | --- |
-| Run DeckDown | Node.js `>= 18` |
-| Generate PDF | no extra system dependency |
-| Generate PPTX | no extra system dependency |
-| Generate PNG | Ghostscript (`gs`) on `PATH` |
-| Run `npm run release-check` | `gs`, `pdftoppm`, and LibreOffice `soffice` |
+| [Docs Overview](./docs/index.md) | start here and navigate the rest of the docs |
+| [Getting Started](./docs/getting-started.md) | install DeckDown and render your first deck |
+| [CLI Reference](./docs/cli.md) | learn the command shape, output behavior, and flags |
+| [Authoring Guide](./docs/authoring.md) | use frontmatter, imports, images, and layout attributes |
+| [AI Agent Workflows](./docs/agent-workflows.md) | fit DeckDown into agent-driven content pipelines |
 
 ## Quick Start
 
@@ -85,225 +80,57 @@ theme:
 
 # Product Review
 
-DeckDown compiles Markdown slides to PDF, PNG, and PPTX.
+DeckDown compiles Markdown slides to real presentation files.
 
 ---
 
 # Shared Source, Multiple Outputs
 
 - PDF for review
-- PNG for visual diffing
-- PPTX for handoff
+- PNG for previews and visual QA
+- PPTX for downstream handoff
 ```
 
 Render it:
 
 ```bash
 deckdown deck.md -o deck.pdf
-deckdown deck.md -o deck.pptx --format pptx
 deckdown deck.md -o slides --format png
-```
-
-Reference decks live in [samples/](./samples).
-
-## What To Use It For
-
-- Generate executive update decks from product docs or issue trackers
-- Turn engineering notes into architecture presentations
-- Let AI agents compile Markdown slide drafts into deliverable decks
-- Produce PPTX handoff files from Markdown source
-- Export PNG slides for visual QA or automated review workflows
-
-## CLI Usage
-
-Basic form:
-
-```bash
-deckdown <input> [-o <path>] [--format pdf|png|pptx]
-```
-
-Output behavior:
-- PDF can write to a file or to stdout when `-o` is omitted
-- PNG requires `-o` and writes one image per slide into that directory
-- PPTX requires `-o` and writes a single `.pptx` file
-
-Common commands:
-
-```bash
-# PDF file
-deckdown deck.md -o deck.pdf
-
-# PDF to stdout
-deckdown deck.md > deck.pdf
-
-# PPTX
 deckdown deck.md -o deck.pptx --format pptx
-
-# PNG slide set
-deckdown deck.md -o slides --format png
-
-# Override page size
-deckdown deck.md -o deck.pdf --page-width 1600 --page-height 900 --margin 68
 ```
 
-Direct repo execution is also available:
+## Why DeckDown
 
-```bash
-node src/cli.js deck.md -o deck.pdf
-```
-
-Run `deckdown --help` for the current option list.
-
-## Authoring Model
-
-DeckDown uses a small Markdown-plus-directives syntax for presentations.
-
-### Frontmatter
-
-Use YAML frontmatter to define page and theme settings:
-
-```yaml
----
-title: My Deck
-page:
-  width: 1920
-  height: 1080
-  margin: 80
-theme:
-  fonts:
-    heading: Helvetica
-    body: Helvetica
-    code: Courier
-  colors:
-    background: '#ffffff'
-    text: '#111827'
-    heading: '#0f172a'
-    accent: '#2563eb'
-    codeBg: '#f8fafc'
-  typography:
-    lineHeight: 1.5
-    headingScale: 2.2
-    bodySize: 22
-    codeSize: 18
-  spacing:
-    paragraph: 24
-    slidePadding: 60
----
-```
-
-### Slide Breaks
-
-Separate slides with a line containing only `---`:
-
-```markdown
-# Slide One
-
-Content
-
----
-
-# Slide Two
-```
-
-### Block Attributes
-
-Attach layout attributes with `{{ ... }}`:
-
-```markdown
-# Centered Title {{ center }}
-
-![Architecture](./diagram.png)
-{{ width: 72% center contain height: 430 }}
-
-{{ cols: 2 }}
-### Left Column
-
-Content for the first column.
-
-{{ col: break }}
-### Right Column
-
-Content for the second column.
-```
-
-Supported built-in attributes:
-
-| Attribute | Effect |
-| --- | --- |
-| `{{ center }}` | Center the block horizontally |
-| `{{ middle }}` | Center the block vertically in the slide content area |
-| `{{ left }}` | Left align the block |
-| `{{ right }}` | Right align the block |
-| `{{ width: X% }}` | Set block width as a percentage of available content width |
-| `{{ scale: X }}` | Scale a block relative to available width |
-| `{{ cols: N }}` | Start an `N` column layout |
-| `{{ col: break }}` | Move to the next column |
-| `{{ cover }}` | Render an image as cover within its block bounds |
-| `{{ contain }}` | Render an image contained within its block bounds |
-| `{{ height: N }}` | Set an explicit image height |
-
-### Imports
-
-Use `@import[...]` to compose decks from reusable files:
-
-```markdown
-@import[theme.yaml]
-@import[slides/title.md]
-@import[slides/metrics.md]
-```
-
-Imports are resolved recursively. YAML imports are merged before document frontmatter, and document metadata wins on conflicts.
-
-## Code Highlighting
-
-Fenced code blocks with a language identifier are highlighted with Shiki and carried through PDF, PNG, and PPTX output.
-
-````markdown
-```javascript
-const outputs = ['pdf', 'png', 'pptx'];
-```
-````
-
-## Images
-
-DeckDown currently expects local image paths.
-
-```markdown
-![Diagram](./diagram.png)
-
-![Hero](./cover.png)
-{{ width: 86% center contain height: 430 }}
-```
+- Repo-native authoring: keep decks in git, review changes as text, and split shared material into reusable Markdown or YAML files.
+- Deterministic rendering: the same source deck can produce PDF, PNG, and PPTX locally without a browser editing step.
+- AI-agent friendly: agents can generate the Markdown, run one CLI command, and hand off real presentation files.
+- Small authoring surface: frontmatter, imports, and layout attributes cover the common cases without turning Markdown into a hidden slide editor.
 
 ## Output Formats
 
 | Format | Output | Notes |
 | --- | --- | --- |
 | PDF | single file or stdout | best for review, export, and archival |
-| PNG | directory of slide images | useful for visual QA and diffs |
-| PPTX | single file | useful for handoff into presentation tooling |
+| PNG | directory of slide images | requires Ghostscript and works well for docs, previews, and QA |
+| PPTX | single file | best for PowerPoint handoff |
 
-## Current Limitations
+## Requirements
 
-- PNG output requires Ghostscript (`gs`) on `PATH`
-- Images currently use local file paths
-- Watch mode is not implemented yet
+| Task | Requirement |
+| --- | --- |
+| Run DeckDown | Node.js `>= 18` |
+| Generate PNG | Ghostscript (`gs`) on `PATH` |
+| Run `npm run release-check` | `gs`, `pdftoppm`, and LibreOffice `soffice` |
 
-## Why This Is Different From Browser AI Slide Tools
+Current limits:
+- images are expected to be local files
+- `--watch` is not implemented
 
-DeckDown is not another hosted slide editor with AI bolted on. It is a local-first presentation compiler that AI agents can drive programmatically:
+## Example Decks
 
-- no browser automation required
-- no proprietary deck format in the render path
-- no cloud lock-in for compilation
-- better fit for agent workflows, CI, and docs-as-code teams
-- focused on rendering, not content generation
-
-## Examples
-
-Reference decks in this repo:
-- [samples/sample-deck.md](./samples/sample-deck.md)
-- [samples/phil-opp-os/presentation.md](./samples/phil-opp-os/presentation.md)
+- [`samples/readme-showcase.md`](./samples/readme-showcase.md) for the homepage gallery deck
+- [`samples/sample-deck.md`](./samples/sample-deck.md) for a compact end-to-end example
+- [`samples/phil-opp-os/presentation.md`](./samples/phil-opp-os/presentation.md) for a larger imported deck
 
 ## Release Verification
 
@@ -313,37 +140,15 @@ Before publishing, run:
 npm run release-check
 ```
 
-The release gate verifies:
-- required local tools
-- isolated Jest suites
-- sample PDF, PNG, and PPTX renders
-- PDF and PPTX round-trip image conversion
-- `npm pack` output
-- packed CLI execution from the generated tarball
-
-`npm publish` is guarded by `prepublishOnly`, which re-runs the release gate before publish.
+The release gate verifies test suites, sample renders, packed CLI behavior, and npm packaging.
 
 ## Development
 
-Install dependencies:
-
 ```bash
 npm install
-```
-
-Run tests:
-
-```bash
 npm test
-```
-
-Create a publishable tarball locally:
-
-```bash
 npm pack --pack-destination dist
 ```
-
-That produces an npm-installable artifact in [dist/](./dist).
 
 ## License
 
