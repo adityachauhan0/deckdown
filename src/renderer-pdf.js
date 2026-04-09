@@ -102,13 +102,21 @@ export class PDFRenderer {
         break;
         
       case 'paragraph':
-        this.doc.font(font)
-           .fontSize(block.fontSize)
-           .fillColor(block.color)
-           .text(block.text, block.x, block.y, {
-             width: block.width,
-             lineGap: this.layout.theme.typography.lineHeight
-           });
+        if (block.segments && block.segments.length > 0) {
+          this.renderFormattedText(block);
+        } else {
+          this.doc.font(font)
+             .fontSize(block.fontSize)
+             .fillColor(block.color)
+             .text(block.text, block.x, block.y, {
+               width: block.width,
+               lineGap: this.layout.theme.typography.lineHeight
+             });
+        }
+        break;
+        
+      case 'table':
+        this.renderTable(block);
         break;
         
       case 'code':
@@ -182,6 +190,122 @@ export class PDFRenderer {
           }
         }
         break;
+
+      case 'math':
+      case 'mermaid':
+        if (block.renderAsset?.pngBuffer) {
+          try {
+            this.doc.image(block.renderAsset.pngBuffer, block.x, block.y, {
+              fit: [block.width, block.height || 400],
+              align: 'center',
+              valign: 'center'
+            });
+          } catch (err) {
+            this.doc.font('Helvetica')
+              .fontSize(14)
+              .fillColor('#999999')
+              .text(`[${block.type}]`, block.x, block.y);
+          }
+        }
+        break;
+    }
+  }
+
+  renderFormattedText(block) {
+    const fontSize = block.fontSize || this.layout.theme.typography.bodySize;
+    const lineHeight = this.layout.theme.typography.lineHeight;
+    const lineGap = fontSize * (lineHeight - 1);
+    
+    const y = block.y;
+    const x = block.x;
+    const maxWidth = block.width;
+    
+    this.doc.save();
+    
+    for (let i = 0; i < block.segments.length; i++) {
+      const segment = block.segments[i];
+      const segmentText = segment.text;
+      if (!segmentText) continue;
+      
+      const hasBold = segment.formats?.includes('bold');
+      const hasItalic = segment.formats?.includes('italic');
+      const hasCode = segment.formats?.includes('code');
+      const isLastSegment = i === block.segments.length - 1;
+      
+      let fontFamily = this.getFontFamily(block);
+      if (hasCode) {
+        fontFamily = 'Courier';
+      }
+      
+      if (hasBold) {
+        this.doc.font(`${fontFamily}-Bold`);
+      } else if (hasItalic) {
+        this.doc.font(`${fontFamily}-Oblique`);
+      } else {
+        this.doc.font(fontFamily);
+      }
+      
+      this.doc.fontSize(fontSize);
+      this.doc.fillColor(block.color);
+      
+      const continued = !isLastSegment;
+      const endNewline = segmentText.endsWith('\n');
+      
+      this.doc.text(segmentText, x, y, {
+        width: maxWidth,
+        lineGap,
+        continued,
+        endNewline
+      });
+    }
+    
+    this.doc.restore();
+  }
+
+  renderTable(block) {
+    const fontSize = block.fontSize || this.layout.theme.typography.bodySize;
+    const fontFamily = this.getFontFamily(block);
+    const rowHeight = fontSize * 2.0;
+    const cellPadding = 12;
+    const tableWidth = block.width || 800;
+    
+    const rows = block.rows || [];
+    if (rows.length === 0) return;
+    
+    const colCount = Math.max(...rows.map(row => row.length));
+    const colWidth = (tableWidth - (cellPadding * 2)) / colCount;
+    
+    let y = block.y;
+    const x = block.x;
+    
+    this.doc.font(fontFamily).fontSize(fontSize);
+    
+    for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
+      const row = rows[rowIndex];
+      const isHeader = rowIndex === 0;
+      
+      const rowY = y + (rowIndex * rowHeight);
+      
+      if (isHeader) {
+        this.doc.rect(x, rowY, tableWidth, rowHeight).fill(this.layout.theme.colors.accent || '#0066cc');
+        this.doc.fillColor('#ffffff');
+      } else {
+        this.doc.rect(x, rowY, tableWidth, rowHeight).fill(rowIndex % 2 === 0 ? '#f8f8f8' : '#ffffff');
+        this.doc.fillColor(this.layout.theme.colors.text);
+      }
+      
+      this.doc.rect(x, rowY, tableWidth, rowHeight).stroke('#cccccc');
+      
+      for (let colIndex = 0; colIndex < row.length; colIndex++) {
+        const cellX = x + cellPadding + (colIndex * colWidth);
+        const cellY = rowY + (rowHeight / 2) - (fontSize / 2);
+        
+        this.doc.font(isHeader ? `${fontFamily}-Bold` : fontFamily);
+        this.doc.text(String(row[colIndex] || ''), cellX, cellY, {
+          width: colWidth - (cellPadding * 2),
+          lineGap: 0
+        });
+      }
     }
   }
 }

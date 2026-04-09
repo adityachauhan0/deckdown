@@ -162,6 +162,19 @@ export class PPTXRenderer {
           }
         }
         break;
+
+      case 'math':
+      case 'mermaid':
+        if (block.renderAsset?.pngDataUri) {
+          pptSlide.addImage({
+            data: block.renderAsset.pngDataUri,
+            x,
+            y,
+            w,
+            h: this.toInches(block.height || 240)
+          });
+        }
+        break;
     }
   }
 }

@@ -18,17 +18,27 @@ describe('Studio server', () => {
       expect(projectResponse.status).toBe(200);
       expect(projectPayload.initialFile).toBe(null);
       expect(projectPayload.canBootstrap).toBe(true);
+      expect(projectPayload.bootstrap.templates).toEqual(expect.arrayContaining([
+        expect.objectContaining({ id: 'presentation-16x9' }),
+        expect.objectContaining({ id: 'custom' })
+      ]));
 
       const initResponse = await fetch(`${url}api/workspace/init`, {
         method: 'POST',
         headers: {
           'content-type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          templateId: 'paper-letter'
+        })
       });
       const initPayload = await initResponse.json();
       expect(initResponse.status).toBe(200);
       expect(initPayload.entryFile).toBe('deck.md');
+      expect(initPayload.templateId).toBe('paper-letter');
       expect(existsSync(join(tempDir, 'deck.md'))).toBe(true);
+      expect(existsSync(join(tempDir, 'AGENTS.md'))).toBe(true);
+      expect(readFileSync(join(tempDir, 'deck.md'), 'utf8')).toContain('width: 1056');
 
       const refreshedProjectResponse = await fetch(`${url}api/project`);
       const refreshedProjectPayload = await refreshedProjectResponse.json();
@@ -65,14 +75,34 @@ describe('Studio server', () => {
       expect(html).toContain('id="export-pdf"');
       expect(html).toContain('id="export-png"');
       expect(html).toContain('id="export-pptx"');
+      expect(html).toContain('id="outline-list"');
+      expect(html).toContain('id="docs-toggle"');
+      expect(html).toContain('id="docs-view"');
+      expect(html).toContain('id="drawer-resizer"');
+      expect(html).toContain('id="preview-resizer"');
 
       const labelsModuleResponse = await fetch(`${url}slide-labels.js`);
       expect(labelsModuleResponse.status).toBe(200);
+
+      const editorBundleResponse = await fetch(`${url}studio-editor.js`);
+      const editorBundle = await editorBundleResponse.text();
+      expect(editorBundleResponse.status).toBe(200);
+      expect(editorBundle).toContain('EditorView');
 
       const projectResponse = await fetch(`${url}api/project`);
       const projectPayload = await projectResponse.json();
       expect(projectResponse.status).toBe(200);
       expect(projectPayload.initialFile).toBe('deck.md');
+      expect(projectPayload.tree.children.some(node => node.path === 'deck.md')).toBe(true);
+
+      const docsResponse = await fetch(`${url}api/docs?page=cli`);
+      const docsPayload = await docsResponse.json();
+      expect(docsResponse.status).toBe(200);
+      expect(docsPayload.page.slug).toBe('cli');
+      expect(docsPayload.page.content).toContain('CLI Reference');
+
+      const docsRouteResponse = await fetch(`${url}docs/getting-started`);
+      expect(docsRouteResponse.status).toBe(200);
 
       const fileResponse = await fetch(`${url}api/file?path=deck.md`);
       const filePayload = await fileResponse.json();

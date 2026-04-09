@@ -8,17 +8,23 @@ title: Test Presentation
 
 Hello World
 
+```python
+x = 3;
+```
+
 ---
 
 # Slide 2
 
-```javascript
-const x = 1;
-console.log(x);
-```
+$$
+\int_0^1 x^2 \\, dx
+$$
 
 ---
 
 # Slide 3
 
-Some text content.
+```mermaid
+graph TD
+  Draft --> Review --> Export
+```

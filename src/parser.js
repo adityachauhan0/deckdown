@@ -95,10 +95,36 @@ export class Parser {
           break;
           
         case TokenType.CODE_BLOCK:
+          currentSlide.blocks.push(this.createBlock(
+            ['mermaid'].includes(String(token.value.language || '').trim().toLowerCase())
+              ? {
+                  type: 'mermaid',
+                  content: token.value.content,
+                  language: token.value.language,
+                  attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+                }
+              : ['math', 'latex', 'tex'].includes(String(token.value.language || '').trim().toLowerCase())
+                ? {
+                    type: 'math',
+                    formula: token.value.content,
+                    language: token.value.language,
+                    attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+                  }
+                : {
+                    type: 'code',
+                    ...token.value,
+                    attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+                  }
+          ));
+          pendingAttributes = [];
+          lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
+          break;
+
+        case TokenType.MATH_BLOCK:
           currentSlide.blocks.push(this.createBlock({
-            type: 'code',
-            ...token.value,
-            attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
+            type: 'math',
+            formula: token.value,
+            attributes: [...pendingAttributes]
           }));
           pendingAttributes = [];
           lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
@@ -122,8 +148,23 @@ export class Parser {
           currentSlide.blocks.push(this.createBlock({
             type: 'paragraph',
             text: token.value,
+            segments: token.segments || [{ text: token.value, formats: [] }],
             attributes: [...pendingAttributes, ...normalizeAttributes(token.value.attributes)]
           }));
+          pendingAttributes = [];
+          lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
+          break;
+          
+        case TokenType.TABLE_ROW:
+          if (lastBlock && lastBlock.type === 'table') {
+            lastBlock.rows.push(token.value);
+          } else {
+            currentSlide.blocks.push(this.createBlock({
+              type: 'table',
+              rows: [token.value],
+              attributes: [...pendingAttributes, ...normalizeAttributes(token.attributes || [])]
+            }));
+          }
           pendingAttributes = [];
           lastBlock = currentSlide.blocks[currentSlide.blocks.length - 1];
           break;

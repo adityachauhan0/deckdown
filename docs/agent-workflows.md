@@ -29,11 +29,12 @@ deckdown init .
 deckdown studio .
 ```
 
-2. Gather source material.
+2. Keep the repo `AGENTS.md` file in place, or print it into an existing repo with `deckdown ai-prompt > AGENTS.md`.
+3. Gather source material.
    Good inputs include docs, product notes, changelogs, RFCs, architecture docs, and metrics summaries.
-3. Have the agent draft `deck.md`.
-4. Move repeated or shared material into imported Markdown or YAML fragments.
-5. Render the deck with DeckDown.
+4. Have the agent draft `deck.md`.
+5. Move repeated or shared material into imported Markdown or YAML fragments.
+6. Render the deck with DeckDown.
 
 ```bash
 deckdown deck.md -o deck.pdf
@@ -41,8 +42,8 @@ deckdown deck.md -o deck.pptx --format pptx
 deckdown deck.md -o slides --format png
 ```
 
-6. Review the rendered output.
-7. Edit the Markdown and rerun the renderer until the deck is ready.
+7. Review the rendered output.
+8. Edit the Markdown and rerun the renderer until the deck is ready.
 
 ## Best Fit
 

@@ -6,8 +6,9 @@ DeckDown is designed to behave like a straightforward build tool: one input, one
 
 ```bash
 deckdown <input> [-o <path>] [--format pdf|png|pptx]
-deckdown init [target]
+deckdown init [target] [--template <id>]
 deckdown studio [target]
+deckdown ai-prompt
 ```
 
 ## Output Behavior
@@ -25,10 +26,22 @@ Scaffold a workspace:
 deckdown init .
 ```
 
+Scaffold a document workspace:
+
+```bash
+deckdown init . --template paper-letter
+```
+
 Launch Studio on the current repo:
 
 ```bash
 deckdown studio .
+```
+
+Print canonical AI instructions:
+
+```bash
+deckdown ai-prompt > AGENTS.md
 ```
 
 PDF file:
@@ -70,13 +83,16 @@ deckdown deck.md -o deck.pdf --page-width 1600 --page-height 900 --margin 68
 | `--page-width <pixels>` | Page width override |
 | `--page-height <pixels>` | Page height override |
 | `--margin <pixels>` | Page margin override |
+| `init --template <id>` | Starter workspace template id |
+| `ai-prompt` | Print the canonical repo AI instructions |
 
 ## Subcommands
 
 | Command | Meaning |
 | --- | --- |
-| `deckdown init [target]` | Create a starter repo-first DeckDown workspace |
-| `deckdown studio [target]` | Launch the localhost Studio against a deck file or repo folder |
+| `deckdown init [target]` | Create a starter repo-first DeckDown workspace with templates and `AGENTS.md` |
+| `deckdown studio [target]` | Launch the localhost Studio against a deck file or repo folder with a tree sidebar and local docs browser |
+| `deckdown ai-prompt` | Print the canonical `AGENTS.md` content for an existing repo |
 
 ## Exit Conditions
 
@@ -89,5 +105,6 @@ DeckDown exits non-zero when:
 
 - PNG output depends on `gs` being available on `PATH`.
 - Direct repo execution is available with `node src/cli.js`.
+- Studio serves the same local docs pages used in this repository, including `docs/index.md`, `docs/getting-started.md`, `docs/cli.md`, `docs/authoring.md`, `docs/agent-workflows.md`, and `docs/ai.md`.
 - For a higher-level walkthrough, see [Getting Started](./getting-started.md).
 - For deck syntax and reusable fragments, see [Authoring Guide](./authoring.md).

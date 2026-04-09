@@ -5,6 +5,7 @@
 ### Interrupts
 
 The series moves from bootstrapping into CPU exceptions, double faults, and hardware interrupts.
+> god gave me fire, i ate marshmallows with it.
 
 Failure handling becomes part of the learning path instead of an afterthought.
 

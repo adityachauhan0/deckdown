@@ -25,14 +25,14 @@ export const DEFAULT_THEME = {
     codeBg: '#f5f5f5'
   },
   typography: {
-    lineHeight: 1.5,
-    headingScale: 2.0,
-    bodySize: 18,
-    codeSize: 16
+    lineHeight: 1.45,
+    headingScale: 2.1,
+    bodySize: 28,
+    codeSize: 20
   },
   spacing: {
-    paragraph: 24,
-    slidePadding: 60
+    paragraph: 28,
+    slidePadding: 72
   }
 };
 
@@ -262,6 +262,12 @@ export class LayoutEngine {
       width = (blockAttrs.width / 100) * slideWidth;
     } else if (blockAttrs.scale !== undefined) {
       width = blockAttrs.scale * slideWidth;
+    } else if (block.type === 'math') {
+      width = slideWidth * 0.72;
+      blockAttrs.center = true;
+    } else if (block.type === 'mermaid') {
+      width = slideWidth * 0.82;
+      blockAttrs.center = true;
     }
 
     // Calculate x position based on alignment
@@ -305,6 +311,7 @@ export class LayoutEngine {
         layout.fontFamily = this.theme.fonts.body;
         layout.color = this.theme.colors.text;
         layout.text = block.text;
+        layout.segments = block.segments || [{ text: block.text, formats: [] }];
         break;
         
       case 'code':
@@ -322,6 +329,24 @@ export class LayoutEngine {
         layout.height = blockAttrs.height !== undefined ? blockAttrs.height : 400;
         layout.cover = !!blockAttrs.cover;
         layout.contain = !!blockAttrs.contain || !blockAttrs.cover;
+        break;
+
+      case 'math':
+        layout.formula = block.formula;
+        layout.height = blockAttrs.height !== undefined ? blockAttrs.height : 120;
+        layout.contain = true;
+        break;
+
+      case 'mermaid':
+        layout.content = block.content;
+        layout.height = blockAttrs.height !== undefined ? blockAttrs.height : this.estimateMermaidHeight(block);
+        layout.contain = true;
+        break;
+
+      case 'table':
+        layout.rows = block.rows;
+        layout.fontSize = this.theme.typography.bodySize;
+        layout.fontFamily = this.theme.fonts.body;
         break;
     }
     
@@ -347,9 +372,38 @@ export class LayoutEngine {
       }
       case 'image':
         return blockAttrs.height !== undefined ? blockAttrs.height : 400;
+      case 'math':
+        return blockAttrs.height !== undefined ? blockAttrs.height : 120;
+      case 'mermaid':
+        return blockAttrs.height !== undefined ? blockAttrs.height : this.estimateMermaidHeight(block);
+      case 'table': {
+        const rowCount = block.rows ? block.rows.length : 0;
+        const fontSize = this.theme.typography.bodySize;
+        return rowCount * fontSize * 2.0 + 40;
+      }
       default:
         return 50;
     }
+  }
+
+  estimateMermaidHeight(block) {
+    const lines = String(block.content || '')
+      .split(/\r?\n/)
+      .map(line => line.trim())
+      .filter(Boolean);
+    const statementCount = lines.length;
+    const diagramKind = lines[0] || '';
+    const baseHeight = 180 + (statementCount * 28);
+
+    if (diagramKind === 'erDiagram') {
+      return Math.max(560, Math.min(680, baseHeight + 120));
+    }
+
+    if (diagramKind === 'classDiagram') {
+      return Math.max(520, Math.min(640, baseHeight + 80));
+    }
+
+    return Math.max(240, Math.min(520, baseHeight));
   }
 
   estimateWrappedLines(text, width, fontSize, charWidthFactor) {

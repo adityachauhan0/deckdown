@@ -90,6 +90,12 @@ describe('Lexer', () => {
       expect(tokens[0].type).toBe(TokenType.CODE_BLOCK);
       expect(tokens[0].value.language).toBe('');
     });
+
+    test('tokenizes block math fenced with double dollars', () => {
+      const tokens = tokenize('$$\nE = mc^2\n$$');
+      expect(tokens[0].type).toBe(TokenType.MATH_BLOCK);
+      expect(tokens[0].value).toContain('E = mc^2');
+    });
   });
 
   describe('Images', () => {

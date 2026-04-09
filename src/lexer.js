@@ -7,9 +7,11 @@ export const TokenType = {
   FRONTMATTER: 'FRONTMATTER',
   HEADING: 'HEADING',
   CODE_BLOCK: 'CODE_BLOCK',
+  MATH_BLOCK: 'MATH_BLOCK',
   IMAGE: 'IMAGE',
   TEXT: 'TEXT',
   ATTRIBUTE: 'ATTRIBUTE',
+  TABLE_ROW: 'TABLE_ROW',
   EOF: 'EOF'
 };
 
@@ -29,11 +31,14 @@ export class Lexer {
       if (this.pos >= this.input.length) break;
 
       const char = this.input[this.pos];
+      const lineStart = this.isLineStart();
       
       if (this.input.startsWith('@import[', this.pos)) {
         this.tokens.push(this.readImport());
       } else if (this.input.startsWith('---', this.pos) && this.isLineStart()) {
         this.tokens.push(this.readSlideBreakOrFrontmatter());
+      } else if (this.input.startsWith('$$', this.pos) && this.isLineStart()) {
+        this.tokens.push(this.readMathBlock());
       } else if (char === '#' && this.isLineStart()) {
         this.tokens.push(this.readHeading());
       } else if (this.input.startsWith('```', this.pos)) {
@@ -42,6 +47,11 @@ export class Lexer {
         this.tokens.push(this.readImage());
       } else if (char === '{' && this.input[this.pos + 1] === '{') {
         this.tokens.push(this.readAttribute());
+      } else if (char === '|' && lineStart) {
+        const rowToken = this.readTableRowOrText();
+        if (rowToken !== null) {
+          this.tokens.push(rowToken);
+        }
       } else {
         this.tokens.push(this.readText());
       }
@@ -49,6 +59,30 @@ export class Lexer {
     
     this.tokens.push({ type: TokenType.EOF, value: '', line: this.line });
     return this.tokens;
+  }
+
+  readTableRowOrText() {
+    const start = this.pos;
+    const startLine = this.line;
+    const line = this.readLine().trim();
+
+    if (this.isMarkdownTable(line)) {
+      const cells = line.split('|').map(c => c.trim()).filter(c => c !== '');
+      return { type: TokenType.TABLE_ROW, value: cells, line: startLine };
+    }
+
+    const trimmed = line.trim();
+    if (trimmed.startsWith('|') && trimmed.endsWith('|')) {
+      const cells = trimmed.split('|').filter(c => c.trim() !== '');
+      const isSeparator = cells.length >= 2 && cells.every(cell => /^[-:\s]+$/.test(cell.trim()));
+      if (isSeparator) {
+        return null;
+      }
+    }
+
+    this.pos = start;
+    this.line = startLine;
+    return this.readText();
   }
 
   skipWhitespace() {
@@ -244,6 +278,42 @@ export class Lexer {
     return { type: TokenType.TEXT, value: '`', line: startLine };
   }
 
+  readMathBlock() {
+    const startLine = this.line;
+    this.pos += 2;
+
+    if (this.input[this.pos] === '\r') {
+      this.pos++;
+    }
+    if (this.input[this.pos] === '\n') {
+      this.pos++;
+      this.line++;
+    }
+
+    let content = '';
+    while (this.pos < this.input.length) {
+      if (this.input.startsWith('$$', this.pos) && this.isLineStart()) {
+        this.pos += 2;
+        if (this.input[this.pos] === '\r') {
+          this.pos++;
+        }
+        if (this.input[this.pos] === '\n') {
+          this.pos++;
+          this.line++;
+        }
+        break;
+      }
+
+      content += this.input[this.pos];
+      if (this.input[this.pos] === '\n') {
+        this.line++;
+      }
+      this.pos++;
+    }
+
+    return { type: TokenType.MATH_BLOCK, value: content.trim(), line: startLine };
+  }
+
   readImage() {
     const start = this.pos;
     const startLine = this.line;
@@ -291,10 +361,13 @@ export class Lexer {
       if (char === '#' && this.isLineStart()) break;
       if (char === '`' && this.input.startsWith('```', this.pos)) break;
       if (char === '!' && this.input[this.pos + 1] === '[') break;
+      if (char === '|' && this.isLineStart()) break;
       text += char;
       this.pos++;
     }
-    return { type: TokenType.TEXT, value: text.trim(), line: startLine };
+    const trimmedText = text.trim();
+    const segments = this.parseInlineFormatting(trimmedText);
+    return { type: TokenType.TEXT, value: trimmedText, segments, line: startLine };
   }
 
   readLine() {
@@ -342,6 +415,64 @@ export class Lexer {
     }).trim();
 
     return { text: cleaned, attributes };
+  }
+
+  parseInlineFormatting(text) {
+    if (!text || typeof text !== 'string') {
+      return [{ text: '', formats: [] }];
+    }
+
+    const segments = [];
+    const regex = /\*\*([^*]+)\*\*|__([^_]+)__|_([^_]+)_|`([^`]+)`/g;
+    let lastIndex = 0;
+    let match;
+
+    while ((match = regex.exec(text)) !== null) {
+      if (match.index > lastIndex) {
+        segments.push({ text: text.slice(lastIndex, match.index), formats: [] });
+      }
+
+      if (match[1] !== undefined) {
+        segments.push({ text: match[1], formats: ['bold'] });
+      } else if (match[2] !== undefined) {
+        segments.push({ text: match[2], formats: ['bold'] });
+      } else if (match[3] !== undefined) {
+        segments.push({ text: match[3], formats: ['italic'] });
+      } else if (match[4] !== undefined) {
+        segments.push({ text: match[4], formats: ['code'] });
+      }
+
+      lastIndex = regex.lastIndex;
+    }
+
+    if (lastIndex < text.length) {
+      segments.push({ text: text.slice(lastIndex), formats: [] });
+    }
+
+    return segments.length > 0 ? segments : [{ text, formats: [] }];
+  }
+
+  isMarkdownTable(line) {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('|') || !trimmed.endsWith('|')) return false;
+    const cells = trimmed.split('|').filter(c => c.trim() !== '');
+    if (cells.length < 2) return false;
+    const isSeparator = cells.every(cell => /^[-:\s]+$/.test(cell.trim()));
+    return !isSeparator;
+  }
+
+  readTableRow() {
+    const startLine = this.line;
+    let row = '';
+    while (this.pos < this.input.length && this.input[this.pos] !== '\n') {
+      row += this.input[this.pos];
+      this.pos++;
+    }
+    if (this.input[this.pos] === '\n') {
+      this.pos++;
+      this.line++;
+    }
+    return row.trim();
   }
 }
 

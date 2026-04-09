@@ -102,6 +102,55 @@ export class PNGRenderer {
     return pathResolve(src);
   }
 
+  renderFormattedText(doc, block) {
+    const fontSize = block.fontSize || this.layout.theme.typography.bodySize;
+    const lineHeight = this.layout.theme.typography.lineHeight;
+    const lineGap = fontSize * (lineHeight - 1);
+
+    let y = block.y;
+    const x = block.x;
+    const maxWidth = block.width;
+
+    doc.save();
+
+    for (const segment of block.segments) {
+      const segmentText = segment.text;
+      if (!segmentText) continue;
+
+      const hasBold = segment.formats?.includes('bold');
+      const hasItalic = segment.formats?.includes('italic');
+      const hasCode = segment.formats?.includes('code');
+
+      let fontFamily = this.getFontFamily(block);
+      if (hasCode) {
+        fontFamily = 'Courier';
+      }
+
+      if (hasBold) {
+        doc.font(`${fontFamily}-Bold`);
+      } else if (hasItalic) {
+        doc.font(`${fontFamily}-Oblique`);
+      } else {
+        doc.font(fontFamily);
+      }
+
+      doc.fontSize(fontSize);
+      doc.fillColor(block.color);
+
+      const lines = segmentText.split('\n');
+      for (const line of lines) {
+        doc.text(line, x, y, {
+          width: maxWidth,
+          lineGap,
+          continued: false
+        });
+        y += fontSize * lineHeight;
+      }
+    }
+
+    doc.restore();
+  }
+
   async renderBlock(doc, block) {
     const font = this.getFontFamily(block);
     
@@ -117,13 +166,17 @@ export class PNGRenderer {
         break;
         
       case 'paragraph':
-        doc.font(font)
-           .fontSize(block.fontSize)
-           .fillColor(block.color)
-           .text(block.text || '', block.x, block.y, {
-             width: block.width,
-             lineGap: this.layout.theme.typography.lineHeight
-           });
+        if (block.segments && block.segments.length > 0) {
+          this.renderFormattedText(doc, block);
+        } else {
+          doc.font(font)
+             .fontSize(block.fontSize)
+             .fillColor(block.color)
+             .text(block.text || '', block.x, block.y, {
+               width: block.width,
+               lineGap: this.layout.theme.typography.lineHeight
+             });
+        }
         break;
         
       case 'code':
@@ -192,6 +245,24 @@ export class PNGRenderer {
                .fontSize(14)
                .fillColor('#999999')
                .text(`[Image: ${block.alt || block.src}]`, block.x, block.y);
+          }
+        }
+        break;
+
+      case 'math':
+      case 'mermaid':
+        if (block.renderAsset?.pngBuffer) {
+          try {
+            doc.image(block.renderAsset.pngBuffer, block.x, block.y, {
+              fit: [block.width, block.height || 400],
+              align: 'center',
+              valign: 'center'
+            });
+          } catch (err) {
+            doc.font('Helvetica')
+              .fontSize(14)
+              .fillColor('#999999')
+              .text(`[${block.type}]`, block.x, block.y);
           }
         }
         break;

@@ -11,6 +11,7 @@
       <header class="topbar">
         <div class="topbar-group topbar-group-start">
           <button id="files-toggle" class="toolbar-button toolbar-icon" type="button" title="Toggle files">▤</button>
+          <button id="docs-toggle" class="toolbar-button toolbar-pill" type="button" title="Open docs">Docs</button>
           <div class="brand-mark">DeckDown Studio</div>
           <div id="editor-title" class="file-pill">Loading…</div>
           <div id="slide-context" class="status-pill subtle">No slide</div>
@@ -20,6 +21,8 @@
           <button data-snippet="- " class="toolbar-button toolbar-icon" type="button" title="List (- )">•</button>
           <button data-snippet="> " class="toolbar-button toolbar-icon" type="button" title="Quote (> )">"</button>
           <button data-wrap-prefix="`" data-wrap-suffix="`" data-wrap-fallback="inline code" class="toolbar-button toolbar-icon" type="button" title="Inline code (`code`)">&lt;/&gt;</button>
+          <button data-snippet="$$\nE = mc^2\n$$\n" class="toolbar-button toolbar-icon" type="button" title="Block math ($$ ... $$)">∑</button>
+          <button data-snippet="```mermaid\ngraph TD\n  A[Start] --> B[Finish]\n```\n" class="toolbar-button toolbar-icon" type="button" title="Mermaid diagram block">◫◫</button>
           <button data-snippet="[label](https://example.com)" class="toolbar-button toolbar-icon" type="button" title="Link ([label](url))">↗</button>
           <button data-snippet="![Alt text](./assets/image.png)\n{{ width: 72% center contain height: 430 }}\n" class="toolbar-button toolbar-icon" type="button" title="Image (![]())">◫</button>
 
@@ -29,6 +32,8 @@
               <button data-snippet="\n---\n" class="insert-item" type="button" title="Slide break (---)">Slide break</button>
               <button data-snippet="\n---\n# Title Slide\n\n{{ center middle }}\n\nSubtitle\n" class="insert-item" type="button" title="Title slide">Title slide</button>
               <button data-snippet="\n{{ cols: 2 }}\n## Left\n\nContent\n\n{{ col: break }}\n## Right\n\nContent\n" class="insert-item" type="button" title="Two-column layout">Two columns</button>
+              <button data-snippet="\n$$\n\\int_0^1 x^2 \\, dx\n$$\n" class="insert-item" type="button" title="Block LaTeX">LaTeX block</button>
+              <button data-snippet="\n```mermaid\ngraph TD\n  Input --> Review --> Export\n```\n" class="insert-item" type="button" title="Mermaid diagram">Mermaid diagram</button>
             </div>
           </details>
         </div>
@@ -44,11 +49,12 @@
           <button id="refresh-button" class="toolbar-button toolbar-icon" type="button" title="Refresh preview">↻</button>
           <span id="save-status" class="status-pill">Saved</span>
           <span id="export-status" class="status-pill subtle">Ready</span>
+          <div id="export-notification" class="export-notification" role="status" aria-live="polite"></div>
           <button id="save-button" class="primary-button" type="button">Save</button>
         </div>
       </header>
 
-      <div class="studio-layout">
+      <div id="studio-layout" class="studio-layout">
         <aside id="file-drawer" class="file-drawer">
           <div class="sidebar-header">
             <div class="drawer-eyebrow">Workspace</div>
@@ -56,23 +62,55 @@
           </div>
           <p id="project-root" class="drawer-path"></p>
           <div id="file-list" class="file-list"></div>
+          <section class="sidebar-section">
+            <div class="drawer-eyebrow">Outline</div>
+            <div id="outline-list" class="outline-list"></div>
+          </section>
         </aside>
+        <div id="drawer-resizer" class="panel-resizer drawer-resizer" role="separator" aria-orientation="vertical" aria-label="Resize workspace sidebar"></div>
 
         <div id="drawer-backdrop" class="drawer-backdrop"></div>
 
         <main class="workspace">
-          <section class="editor-pane">
-            <div id="slide-tabs" class="slide-tabs"></div>
-            <textarea
-              id="editor"
-              spellcheck="false"
-              placeholder="# Start here&#10;&#10;Write markdown on the left. Use the toolbar for syntax hints and DeckDown inserts.&#10;&#10;---&#10;&#10;Add a slide break when you want the next slide."
-            ></textarea>
+          <section id="workspace-view" class="workspace-view">
+            <section class="editor-pane">
+              <div id="file-tabs" class="file-tabs"></div>
+              <div id="editor" class="editor-host"></div>
+            </section>
+            <div id="preview-resizer" class="panel-resizer workspace-resizer" role="separator" aria-orientation="vertical" aria-label="Resize editor and preview panes"></div>
+
+            <section class="preview-pane">
+              <section id="asset-preview" class="asset-preview is-hidden" aria-label="Asset preview">
+                <div class="asset-preview-header">
+                  <div class="drawer-eyebrow">Asset preview</div>
+                  <div id="asset-preview-meta" class="asset-preview-meta">No asset selected</div>
+                </div>
+                <div id="asset-preview-surface" class="asset-preview-frame">
+                  <div class="asset-preview-empty">Select an asset in the editor to preview it here.</div>
+                </div>
+              </section>
+              <div id="diagnostics" class="diagnostics is-hidden"></div>
+              <div id="slides" class="slides"></div>
+            </section>
           </section>
 
-          <section class="preview-pane">
-            <div id="diagnostics" class="diagnostics is-hidden"></div>
-            <div id="slides" class="slides"></div>
+          <section id="docs-view" class="docs-view is-hidden" aria-label="Documentation browser">
+            <aside class="docs-nav">
+              <div class="sidebar-header">
+                <div class="drawer-eyebrow">Local Docs</div>
+              </div>
+              <div id="docs-nav-list" class="docs-nav-list"></div>
+            </aside>
+            <section class="docs-panel">
+              <div class="docs-panel-header">
+                <div>
+                  <div class="drawer-eyebrow">Documentation</div>
+                  <h1 id="docs-title" class="docs-title">Docs</h1>
+                </div>
+                <div id="docs-route" class="docs-route"></div>
+              </div>
+              <div id="docs-content" class="docs-content"></div>
+            </section>
           </section>
         </main>
       </div>

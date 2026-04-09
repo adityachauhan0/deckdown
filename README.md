@@ -1,10 +1,10 @@
 # DeckDown
 
-> Markdown presentation engine for AI agents with local PDF, PNG, and PPTX output.
+> Markdown to presentation engine, open source and local.
 
-DeckDown is a local-first Markdown-to-presentation compiler for repo-native slide workflows. Write decks in Markdown, compose shared sections with imports, theme them with YAML, and render the same source to review-ready assets or handoff-ready PowerPoint files.
+DeckDown is a local-first, open source Markdown-to-presentation engine for teams that want readable source files, a real localhost Studio, and deterministic output to PDF, PNG, and PPTX.
 
-DeckDown is not an AI presentation generator. It is the render engine agents and humans can drive reliably.
+It is built for repo-native slide workflows. Write in Markdown, keep themes and shared sections in source control, review changes as text, and render the same deck into review assets or handoff files without switching tools.
 
 ## Install
 
@@ -21,65 +21,13 @@ npx deckdown@latest --help
 Published package:
 - npm: `https://www.npmjs.com/package/deckdown`
 
-## Showcase
-
-<p align="center">
-  <img src="./docs/assets/showcase/slide-001.png" alt="DeckDown hero slide rendered to PNG" width="100%" />
-</p>
-
-<p align="center"><em>Image-led hero slide from Markdown source.</em></p>
-
-<p align="center">
-  <img src="./docs/assets/showcase/slide-002.png" alt="DeckDown shared themes and imported sections slide" width="49%" />
-  <img src="./docs/assets/showcase/slide-003.png" alt="DeckDown syntax-highlighted code slide" width="49%" />
-</p>
-
-<p align="center"><em>Reusable theme and import workflow on the left, Shiki-powered code rendering on the right.</em></p>
-
-<p align="center">
-  <img src="./docs/assets/showcase/slide-004.png" alt="DeckDown multi-output slide" width="100%" />
-</p>
-
-<p align="center"><em>One Markdown deck can target PDF, PNG, and PPTX without changing tools.</em></p>
-
-<p align="center">
-  <img src="./docs/assets/showcase/studio-editor.png" alt="DeckDown Studio editing a deck locally with markdown on the left and slide preview on the right" width="100%" />
-</p>
-
-<p align="center"><em>DeckDown Studio keeps the workflow source-first: raw Markdown on the left, live slide review on the right.</em></p>
-
-<p align="center">
-  <img src="./docs/assets/showcase/studio-bootstrap.png" alt="DeckDown Studio first-run workspace bootstrap screen" width="100%" />
-</p>
-
-<p align="center"><em>Studio can also bootstrap a repo-first workspace locally when you start from an empty directory.</em></p>
-
-Showcase source:
-- [`samples/readme-showcase.md`](./samples/readme-showcase.md)
-- [`samples/readme-showcase-imports.md`](./samples/readme-showcase-imports.md)
-
-Rendered with:
-
-```bash
-deckdown samples/readme-showcase.md -o docs/assets/showcase --format png
-```
-
-## Documentation
-
-| Guide | Use it for |
-| --- | --- |
-| [Docs Overview](./docs/index.md) | start here and navigate the rest of the docs |
-| [Getting Started](./docs/getting-started.md) | install DeckDown and render your first deck |
-| [CLI Reference](./docs/cli.md) | learn the command shape, output behavior, and flags |
-| [Authoring Guide](./docs/authoring.md) | use frontmatter, imports, images, and layout attributes |
-| [AI Agent Workflows](./docs/agent-workflows.md) | fit DeckDown into agent-driven content pipelines |
-
 ## Quick Start
 
 Scaffold a workspace:
 
 ```bash
 deckdown init .
+deckdown init . --template paper-letter
 ```
 
 Open the localhost Studio:
@@ -88,7 +36,7 @@ Open the localhost Studio:
 deckdown studio .
 ```
 
-Starter `deck.md`:
+Create a first deck:
 
 ```markdown
 ---
@@ -108,10 +56,10 @@ DeckDown compiles Markdown slides to real presentation files.
 
 ---
 
-# Shared Source, Multiple Outputs
+# Same Source, Multiple Outputs
 
 - PDF for review
-- PNG for previews and visual QA
+- PNG for visual QA
 - PPTX for downstream handoff
 ```
 
@@ -125,18 +73,107 @@ deckdown deck.md -o deck.pptx --format pptx
 
 ## Why DeckDown
 
-- Repo-native authoring: keep decks in git, review changes as text, and split shared material into reusable Markdown or YAML files.
-- Deterministic rendering: the same source deck can produce PDF, PNG, and PPTX locally without a browser editing step.
-- AI-agent friendly: agents can generate the Markdown, run one CLI command, and hand off real presentation files.
-- Small authoring surface: frontmatter, imports, and layout attributes cover the common cases without turning Markdown into a hidden slide editor.
+- Repo-native authoring: keep decks in git, split shared content into Markdown or YAML, and review changes as source instead of opaque slide binaries.
+- Local Studio: edit and review on localhost with a file tree, live preview, diagnostics, docs, and export controls in one workflow.
+- Real render pipeline: Mermaid and LaTeX survive the actual preview and export path instead of stopping at a mock browser view.
+- One source, multiple deliverables: generate PDF, PNG, and PPTX from the same Markdown deck.
+- Open and inspectable: no hosted editor requirement, no hidden project state, no lock-in around the authoring surface.
+
+## Showcase
+
+<p align="center">
+  <img src="./docs/assets/showcase/v1.2.2-slide-001.png" alt="DeckDown v1.2.2 hero slide rendered from the release showcase deck" width="100%" />
+</p>
+
+<p align="center"><em>The new v1.2.2 showcase deck opens with a warm-editorial release slide built in real DeckDown source.</em></p>
+
+<p align="center">
+  <img src="./docs/assets/showcase/v1.2.2-slide-002.png" alt="DeckDown feature slide showing Mermaid, LaTeX, and export workflow rendered from the same deck" width="100%" />
+</p>
+
+<p align="center"><em>The second slide proves product features in the deck itself: Mermaid, LaTeX, repo-native authoring, and multi-format delivery.</em></p>
+
+<p align="center">
+  <img src="./docs/assets/showcase/v1.2.2-studio-editor.png" alt="DeckDown Studio with the v1.2.2 showcase deck open in the editor and preview" width="100%" />
+</p>
+
+<p align="center"><em>Studio stays source-first: deck files on the left, real rendered preview on the right, localhost all the way through.</em></p>
+
+<p align="center">
+  <img src="./docs/assets/showcase/v1.2.2-studio-preview.png" alt="DeckDown Studio showing the v1.2.2 showcase deck with the preview surface emphasized" width="100%" />
+</p>
+
+<p align="center"><em>The same deck drives the README visuals, Studio review flow, and exported release assets.</em></p>
+
+Showcase source:
+- [`samples/v1.2.2-showcase.md`](./samples/v1.2.2-showcase.md)
+- [`samples/readme-showcase.md`](./samples/readme-showcase.md)
+
+## Studio
+
+DeckDown Studio is a localhost editing and review surface for the same source files you keep in the repository.
+
+Current Studio workflow includes:
+- CodeMirror-based Markdown editing
+- DeckDown-aware snippets and completions
+- inline diagnostics while typing
+- file-tree workspace navigation
+- active-slide outline
+- local docs browser
+- asset preview
+- keyboard shortcuts and saved layout preferences
+- template bootstrap for empty workspaces
+
+Studio is not a separate document model. It operates directly on the repo files.
+
+## Mermaid And LaTeX
+
+DeckDown supports both Mermaid and display-style LaTeX math blocks in the preview and export pipeline.
+
+Mermaid:
+
+````markdown
+```mermaid
+graph TD
+  Draft --> Review --> Export
+```
+````
+
+LaTeX:
+
+```markdown
+$$
+\int_0^1 x^2 \, dx = \frac{1}{3}
+$$
+```
+
+These blocks render through the same local path used for Studio, PDF, PNG, and PPTX output.
 
 ## Output Formats
 
-| Format | Output | Notes |
+| Format | Output | Best for |
 | --- | --- | --- |
-| PDF | single file or stdout | best for review, export, and archival |
-| PNG | directory of slide images | requires Ghostscript and works well for docs, previews, and QA |
-| PPTX | single file | best for PowerPoint handoff |
+| PDF | single file or stdout | approvals, review, archival |
+| PNG | directory of slide images | README embeds, QA, visual diffs |
+| PPTX | single file | downstream PowerPoint handoff |
+
+## Documentation
+
+| Guide | Use it for |
+| --- | --- |
+| [Docs Overview](./docs/index.md) | start here and navigate the docs set |
+| [Getting Started](./docs/getting-started.md) | install DeckDown and render your first deck |
+| [CLI Reference](./docs/cli.md) | learn commands, flags, and output behavior |
+| [Authoring Guide](./docs/authoring.md) | work with frontmatter, imports, images, and layout attributes |
+| [AI Agent Workflows](./docs/agent-workflows.md) | fit DeckDown into agent-driven content pipelines |
+| [AI Instructions](./docs/ai.md) | reuse canonical `AGENTS.md` guidance |
+
+## Example Decks
+
+- [`samples/v1.2.2-showcase.md`](./samples/v1.2.2-showcase.md) for the current release surface deck
+- [`samples/readme-showcase.md`](./samples/readme-showcase.md) for the earlier gallery-style README deck
+- [`samples/sample-deck.md`](./samples/sample-deck.md) for a compact end-to-end example
+- [`samples/phil-opp-os/presentation.md`](./samples/phil-opp-os/presentation.md) for a larger imported deck
 
 ## Requirements
 
@@ -150,12 +187,6 @@ Current limits:
 - images are expected to be local files
 - `--watch` is not implemented
 
-## Example Decks
-
-- [`samples/readme-showcase.md`](./samples/readme-showcase.md) for the homepage gallery deck
-- [`samples/sample-deck.md`](./samples/sample-deck.md) for a compact end-to-end example
-- [`samples/phil-opp-os/presentation.md`](./samples/phil-opp-os/presentation.md) for a larger imported deck
-
 ## Release Verification
 
 Before publishing, run:
@@ -164,14 +195,18 @@ Before publishing, run:
 npm run release-check
 ```
 
-The release gate verifies test suites, sample renders, packed CLI behavior, and npm packaging.
+The release gate verifies:
+- Jest suites
+- sample PDF, PNG, and PPTX rendering
+- packed CLI behavior
+- npm packaging contents
 
 ## Development
 
 ```bash
 npm install
-npm test
-npm pack --pack-destination dist
+npm test -- --runInBand
+npm run release-check
 ```
 
 ## License

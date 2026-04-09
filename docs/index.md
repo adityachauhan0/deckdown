@@ -10,6 +10,7 @@ If you want the shortest path from install to first render, read:
 2. [CLI Reference](./cli.md)
 3. [Authoring Guide](./authoring.md)
 4. [AI Agent Workflows](./agent-workflows.md)
+5. [AI Instructions](./ai.md)
 
 ## Fast Commands
 

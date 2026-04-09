@@ -2,13 +2,32 @@ import { spawn } from 'node:child_process';
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { basename, extname, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { build } from 'esbuild';
 import { buildPresentation, ensureGhostscriptAvailable, renderLayout } from '../index.js';
-import { createWorkspace } from '../workspace.js';
+import { createWorkspace, listWorkspaceTemplates } from '../workspace.js';
 
 const STUDIO_INDEX_HTML = readFileSync(new URL('./index.html', import.meta.url), 'utf8');
 const STUDIO_APP_JS = readFileSync(new URL('./app.js', import.meta.url), 'utf8');
 const STUDIO_STYLE_CSS = readFileSync(new URL('./styles.css', import.meta.url), 'utf8');
 const STUDIO_SLIDE_LABELS_JS = readFileSync(new URL('./slide-labels.js', import.meta.url), 'utf8');
+const STUDIO_SLIDE_SEGMENTATION_JS = readFileSync(new URL('./slide-segmentation.js', import.meta.url), 'utf8');
+const STUDIO_SLIDE_OUTLINE_JS = readFileSync(new URL('./slide-outline.js', import.meta.url), 'utf8');
+const STUDIO_LAYOUT_UTILS_JS = readFileSync(new URL('./layout-utils.js', import.meta.url), 'utf8');
+const STUDIO_LAYOUT_CONSTANTS_JS = readFileSync(new URL('./layout-constants.js', import.meta.url), 'utf8');
+const STUDIO_PREFERENCES_JS = readFileSync(new URL('./preferences.js', import.meta.url), 'utf8');
+const STUDIO_SHORTCUTS_JS = readFileSync(new URL('./shortcuts.js', import.meta.url), 'utf8');
+const STUDIO_DOCUMENT_PREVIEW_JS = readFileSync(new URL('./document-preview.js', import.meta.url), 'utf8');
+const STUDIO_EDITOR_ENTRY = new URL('./editor.js', import.meta.url);
+const STUDIO_DOCS_ROOT = fileURLToPath(new URL('../../docs/', import.meta.url));
+const STUDIO_DOC_PAGES = [
+  { slug: 'index', file: 'index.md', title: 'Docs Overview' },
+  { slug: 'getting-started', file: 'getting-started.md', title: 'Getting Started' },
+  { slug: 'cli', file: 'cli.md', title: 'CLI Reference' },
+  { slug: 'authoring', file: 'authoring.md', title: 'Authoring Guide' },
+  { slug: 'agent-workflows', file: 'agent-workflows.md', title: 'AI Agent Workflows' },
+  { slug: 'ai', file: 'ai.md', title: 'AI Instructions' }
+];
 
 const IGNORED_DIRECTORIES = new Set([
   '.git',
@@ -88,6 +107,7 @@ function pickEntryFile(files, requestedEntry) {
   }
 
   const preferredCandidates = [
+    'deck.md',
     'test-render.md',
     'samples/sample-deck.md',
     'samples/readme-showcase.md'
@@ -142,6 +162,89 @@ function summarizeFiles(files) {
   }));
 }
 
+function buildProjectTree(files) {
+  const root = {
+    name: '.',
+    path: '',
+    kind: 'directory',
+    expanded: true,
+    children: []
+  };
+
+  const findOrCreateChild = (parent, name, pathName, kind, fileKind = null) => {
+    let child = parent.children.find(entry => entry.name === name && entry.kind === kind);
+    if (!child) {
+      child = kind === 'directory'
+        ? {
+            name,
+            path: pathName,
+            kind,
+            expanded: true,
+            children: []
+          }
+        : {
+            name,
+            path: pathName,
+            kind,
+            fileKind: fileKind || 'editable'
+          };
+      parent.children.push(child);
+    }
+
+    return child;
+  };
+
+  for (const file of files) {
+    const parts = file.split('/');
+    let current = root;
+    let currentPath = '';
+
+    parts.forEach((part, index) => {
+      currentPath = currentPath ? `${currentPath}/${part}` : part;
+      const isLeaf = index === parts.length - 1;
+      const kind = isLeaf ? 'file' : 'directory';
+      const fileKind = isLeaf
+        ? (isAssetPath(file) ? 'asset' : 'editable')
+        : null;
+      current = findOrCreateChild(current, part, currentPath, kind, fileKind);
+    });
+  }
+
+  const sortChildren = node => {
+    if (!node.children) {
+      return;
+    }
+
+    node.children.sort((left, right) => {
+      if (left.kind !== right.kind) {
+        return left.kind === 'directory' ? -1 : 1;
+      }
+
+      return left.name.localeCompare(right.name);
+    });
+
+    node.children.forEach(sortChildren);
+  };
+
+  sortChildren(root);
+  return root;
+}
+
+function resolveDocsPage(slug = 'index') {
+  const page = STUDIO_DOC_PAGES.find(entry => entry.slug === slug) || STUDIO_DOC_PAGES[0];
+  const filePath = resolve(STUDIO_DOCS_ROOT, page.file);
+  if (!existsSync(filePath)) {
+    return null;
+  }
+
+  return {
+    slug: page.slug,
+    title: page.title,
+    path: filePath,
+    content: readFileSync(filePath, 'utf8')
+  };
+}
+
 function serializePreviewLayout(layout) {
   return {
     page: layout.page,
@@ -149,7 +252,15 @@ function serializePreviewLayout(layout) {
     slides: layout.slides.map(slide => ({
       page: slide.page,
       theme: slide.theme,
-      blocks: slide.blocks.map(block => ({ ...block }))
+      blocks: slide.blocks.map(block => ({
+        ...block,
+        renderAsset: block.renderAsset
+          ? {
+              svgDataUri: block.renderAsset.svgDataUri,
+              pngDataUri: block.renderAsset.pngDataUri
+            }
+          : undefined
+      }))
     }))
   };
 }
@@ -198,16 +309,22 @@ function tryOpenBrowser(url) {
   }
 }
 
-function createExportTarget(rootDir, relativePath, format) {
+function createExportTarget(rootDir, absolutePath, format) {
   const exportRoot = join(rootDir, 'dist', 'studio-exports');
   mkdirSync(exportRoot, { recursive: true });
 
-  const baseName = basename(relativePath, extname(relativePath)).replace(/[^a-zA-Z0-9._-]+/g, '-');
+  const safeRelativePath = relative(rootDir, absolutePath);
+  const pathSegments = safeRelativePath
+    .split(sep)
+    .filter(Boolean)
+    .map(segment => segment.replace(/[^a-zA-Z0-9._-]+/g, '-'));
+  const fileName = pathSegments.pop() || 'deck.md';
+  const baseName = basename(fileName, extname(fileName)).replace(/[^a-zA-Z0-9._-]+/g, '-') || 'deck';
   if (format === 'png') {
-    return join(exportRoot, `${baseName}-png`);
+    return join(exportRoot, ...pathSegments, `${baseName}-png`);
   }
 
-  return join(exportRoot, `${baseName}.${format}`);
+  return join(exportRoot, ...pathSegments, `${baseName}.${format}`);
 }
 
 function getExportCapabilities() {
@@ -229,14 +346,34 @@ function getExportCapabilities() {
   return capabilities;
 }
 
+let studioEditorBundlePromise = null;
+
+async function getStudioEditorBundle() {
+  if (!studioEditorBundlePromise) {
+    studioEditorBundlePromise = build({
+      entryPoints: [STUDIO_EDITOR_ENTRY.pathname],
+      bundle: true,
+      format: 'esm',
+      platform: 'browser',
+      write: false
+    }).then(result => result.outputFiles[0].text);
+  }
+
+  return studioEditorBundlePromise;
+}
+
 export async function startStudioServer(target, options = {}) {
   const { rootDir, entryFile } = resolveStudioTarget(target);
   const exportCapabilities = getExportCapabilities();
   const getProjectState = () => {
     const files = walkProjectFiles(rootDir);
+    const initialFile = pickEntryFile(files, entryFile);
     return {
       files,
-      initialFile: pickEntryFile(files, entryFile)
+      initialFile,
+      bootstrap: initialFile ? null : {
+        templates: listWorkspaceTemplates()
+      }
     };
   };
 
@@ -251,6 +388,11 @@ export async function startStudioServer(target, options = {}) {
         return;
       }
 
+      if (request.method === 'GET' && requestUrl.pathname.startsWith('/docs')) {
+        sendText(response, 200, 'text/html; charset=utf-8', STUDIO_INDEX_HTML);
+        return;
+      }
+
       if (request.method === 'GET' && requestUrl.pathname === '/studio.js') {
         sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_APP_JS);
         return;
@@ -258,6 +400,46 @@ export async function startStudioServer(target, options = {}) {
 
       if (request.method === 'GET' && requestUrl.pathname === '/slide-labels.js') {
         sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_SLIDE_LABELS_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/slide-segmentation.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_SLIDE_SEGMENTATION_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/slide-outline.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_SLIDE_OUTLINE_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/layout-utils.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_LAYOUT_UTILS_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/studio-preferences.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_PREFERENCES_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/studio-shortcuts.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_SHORTCUTS_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/document-preview.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_DOCUMENT_PREVIEW_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/layout-constants.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', STUDIO_LAYOUT_CONSTANTS_JS);
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/studio-editor.js') {
+        sendText(response, 200, 'text/javascript; charset=utf-8', await getStudioEditorBundle());
         return;
       }
 
@@ -278,21 +460,52 @@ export async function startStudioServer(target, options = {}) {
           rootDir,
           initialFile: projectState.initialFile,
           files: summarizeFiles(projectState.files),
+          tree: buildProjectTree(projectState.files),
           exportCapabilities,
-          canBootstrap: projectState.initialFile === null
+          canBootstrap: projectState.initialFile === null,
+          bootstrap: projectState.bootstrap
         });
         return;
       }
 
       if (request.method === 'POST' && requestUrl.pathname === '/api/workspace/init') {
-        const result = createWorkspace(rootDir);
+        const body = await readRequestJson(request);
+        const result = createWorkspace(rootDir, {
+          templateId: body.templateId,
+          customPage: body.customPage
+        });
         const projectState = getProjectState();
         sendJson(response, 200, {
           ok: true,
           rootDir: result.rootDir,
           entryFile: result.entryFile,
+          templateId: result.templateId,
           initialFile: projectState.initialFile,
-          files: summarizeFiles(projectState.files)
+          files: summarizeFiles(projectState.files),
+          tree: buildProjectTree(projectState.files),
+          canBootstrap: false,
+          bootstrap: null
+        });
+        return;
+      }
+
+      if (request.method === 'GET' && requestUrl.pathname === '/api/docs') {
+        const page = resolveDocsPage(requestUrl.searchParams.get('page') || 'index');
+        if (!page) {
+          sendJson(response, 404, { error: 'Docs page not found.' });
+          return;
+        }
+
+        sendJson(response, 200, {
+          pages: STUDIO_DOC_PAGES.map(entry => ({
+            slug: entry.slug,
+            title: entry.title
+          })),
+          page: {
+            slug: page.slug,
+            title: page.title,
+            content: page.content
+          }
         });
         return;
       }
@@ -385,8 +598,9 @@ export async function startStudioServer(target, options = {}) {
           return;
         }
 
-        const outputPath = createExportTarget(rootDir, relativePath, format);
+        const outputPath = createExportTarget(rootDir, absolutePath, format);
         rmSync(outputPath, { recursive: true, force: true });
+        mkdirSync(join(outputPath, '..'), { recursive: true });
 
         if (format === 'png') {
           ensureGhostscriptAvailable();

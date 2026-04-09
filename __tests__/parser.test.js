@@ -66,6 +66,20 @@ describe('Parser', () => {
       expect(doc.slides[0].blocks[0].content).toContain('const x = 1');
     });
 
+    test('parses mermaid fences into diagram blocks', () => {
+      const tokens = tokenize('```mermaid\ngraph TD\n  A --> B\n```');
+      const doc = parse(tokens);
+      expect(doc.slides[0].blocks[0].type).toBe('mermaid');
+      expect(doc.slides[0].blocks[0].content).toContain('graph TD');
+    });
+
+    test('parses block math into math blocks', () => {
+      const tokens = tokenize('$$\n\\int_0^1 x^2 dx\n$$');
+      const doc = parse(tokens);
+      expect(doc.slides[0].blocks[0].type).toBe('math');
+      expect(doc.slides[0].blocks[0].formula).toContain('\\int_0^1');
+    });
+
     test('parses image block', () => {
       const tokens = tokenize('![Alt](image.png)');
       const doc = parse(tokens);

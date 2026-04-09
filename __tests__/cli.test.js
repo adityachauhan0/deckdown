@@ -16,6 +16,10 @@ describe('CLI contract', () => {
     expect(createProgram('1.0.0').helpInformation()).toContain('init');
   });
 
+  test('help advertises the ai-prompt command', () => {
+    expect(createProgram('1.0.0').helpInformation()).toContain('ai-prompt');
+  });
+
   test('allows PDF output without an explicit output path', () => {
     expect(() => validateOutputTarget('pdf')).not.toThrow();
   });

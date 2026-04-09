@@ -27,4 +27,19 @@ More body
 
     expect(labels).toEqual(['Lead paragraph', 'Image']);
   });
+
+  test('ignores slide break markers inside fenced code blocks', () => {
+    const labels = deriveSlideLabels(`# Intro
+
+\`\`\`md
+---
+\`\`\`
+
+---
+
+# Actual Slide
+`);
+
+    expect(labels).toEqual(['Intro', 'Actual Slide']);
+  });
 });

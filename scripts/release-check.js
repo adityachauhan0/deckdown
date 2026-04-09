@@ -123,10 +123,12 @@ requireTool('soffice');
 requireTool('npm');
 requireTool('tar', ['--version']);
 runStep('deckdown CLI help', nodeBin, [cliBin, '--help']);
+runStep('deckdown ai-prompt', nodeBin, [cliBin, 'ai-prompt']);
 
 const testFiles = [
   '__tests__/lexer.test.js',
   '__tests__/parser.test.js',
+  '__tests__/ai-prompt.test.js',
   '__tests__/cli.test.js',
   '__tests__/workspace.test.js',
   '__tests__/studio.test.js',
@@ -204,10 +206,12 @@ if (npmPackResult.status === 0) {
     const packedPaths = new Set((packInfo.files || []).map(file => file.path));
     assertCondition('npm pack includes CLI entrypoint', packedPaths.has('src/cli.js'));
     assertCondition('npm pack includes compiler entrypoint', packedPaths.has('src/index.js'));
+    assertCondition('npm pack includes AI prompt module', packedPaths.has('src/ai-prompt.js'));
     assertCondition('npm pack includes workspace scaffold', packedPaths.has('src/workspace.js'));
     assertCondition('npm pack includes Studio server', packedPaths.has('src/studio/server.js'));
     assertCondition('npm pack includes Studio app shell', packedPaths.has('src/studio/index.html'));
     assertCondition('npm pack includes Studio client', packedPaths.has('src/studio/app.js'));
+    assertCondition('npm pack includes Studio editor bundle source', packedPaths.has('src/studio/editor.js'));
     assertCondition('npm pack includes Studio styles', packedPaths.has('src/studio/styles.css'));
     assertCondition('npm pack excludes tests', !Array.from(packedPaths).some(file => file.startsWith('__tests__/')));
     assertCondition('npm pack excludes dist output', !Array.from(packedPaths).some(file => file.startsWith('dist/')));

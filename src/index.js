@@ -12,8 +12,10 @@ import { layoutDocument } from './layout.js';
 import { renderPDF } from './renderer-pdf.js';
 import { renderPNG } from './renderer-png.js';
 import { renderPPTX } from './renderer-pptx.js';
+import { hydrateRenderableAssets } from './render-assets.js';
 import { startStudioServer } from './studio/server.js';
 import { createWorkspace } from './workspace.js';
+import { buildAiPrompt } from './ai-prompt.js';
 
 function mergeConfig(base, override) {
   const result = { ...base };
@@ -191,7 +193,10 @@ async function buildPresentation(inputPath, options = {}) {
   diagnostics.push(...validateDocument(absoluteInputPath, resolvedContent, document, metadata));
   const layoutOptions = createLayoutOptions(metadata, options);
   const compiledDocument = { ...document, metadata };
-  const layout = layoutDocument(compiledDocument, layoutOptions);
+  const layout = await hydrateRenderableAssets(
+    layoutDocument(compiledDocument, layoutOptions),
+    { diagnostics }
+  );
 
   return {
     inputPath: absoluteInputPath,
@@ -264,11 +269,26 @@ function createProgram(version = '0.0.0') {
     .command('init [target]')
     .description('Create a repo-first DeckDown workspace')
     .option('--force', 'Overwrite starter files if they already exist')
+    .option('--template <id>', 'Workspace template id', 'presentation-16x9')
+    .option('--page-width <pixels>', 'Custom page width in pixels')
+    .option('--page-height <pixels>', 'Custom page height in pixels')
+    .option('--margin <pixels>', 'Custom page margin in pixels')
     .action((target = process.cwd(), options) => {
       try {
-        const result = createWorkspace(target, options);
+        const result = createWorkspace(target, {
+          force: options.force,
+          templateId: options.template,
+          customPage: options.pageWidth || options.pageHeight || options.margin
+            ? {
+              width: options.pageWidth,
+              height: options.pageHeight,
+              margin: options.margin
+            }
+            : undefined
+        });
         console.log(`DeckDown workspace created at ${result.rootDir}`);
         console.log(`Starter deck: ${result.entryFile}`);
+        console.log(`Template: ${result.templateId}`);
       } catch (err) {
         console.error(`Error: ${err.message}`);
         process.exit(1);
@@ -287,6 +307,13 @@ function createProgram(version = '0.0.0') {
         console.error(`Error: ${err.message}`);
         process.exit(1);
       }
+    });
+
+  program
+    .command('ai-prompt')
+    .description('Print canonical AI instructions for a DeckDown repository')
+    .action(() => {
+      process.stdout.write(buildAiPrompt());
     });
 
   return program;

@@ -46,6 +46,7 @@ Scaffold a local workspace:
 
 ```bash
 deckdown init .
+deckdown init . --template presentation-4x3
 ```
 
 Open the localhost editor:
@@ -53,6 +54,9 @@ Open the localhost editor:
 ```bash
 deckdown studio .
 ```
+
+If you start Studio in an empty folder, it now opens a first-run template picker for presentation and document sizes.
+The Studio sidebar now uses a collapsible tree for repo files, and the top bar includes a Docs toggle that opens the local docs browser for this repository.
 
 Starter `deck.md`:
 
@@ -118,3 +122,4 @@ Reference decks:
 - [CLI Reference](./cli.md) for exact flags and output rules
 - [Authoring Guide](./authoring.md) for frontmatter, imports, and layout attributes
 - [AI Agent Workflows](./agent-workflows.md) for using DeckDown as a render engine
+- [AI Instructions](./ai.md) for the canonical `AGENTS.md` flow

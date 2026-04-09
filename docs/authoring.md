@@ -20,6 +20,8 @@ title: My Deck
 
 Use shared files when you want reusable themes or repeated sections. Keep the source readable first; use directives to refine layout, not to rebuild a slide editor inside Markdown.
 
+When you scaffold a new workspace, `theme.yaml` starts with field-by-field comments plus commented presets and component ideas. The intended workflow is to uncomment, render, and keep the values that fit your deck instead of starting from an empty YAML file.
+
 ## Frontmatter
 
 Use YAML frontmatter to define page and theme settings:
@@ -129,6 +131,17 @@ Supported attributes:
 | `{{ contain }}` | Render an image contained within its block bounds |
 | `{{ height: N }}` | Set an explicit image height |
 
+## Theme Tokens
+
+DeckDown currently merges theme overrides from these sections:
+
+- `fonts`
+- `colors`
+- `typography`
+- `spacing`
+
+The starter `theme.yaml` calls those out directly and adds commented examples for component-specific styling ideas so you can copy the pattern into your own deck file or imported YAML fragment.
+
 ## Code Blocks
 
 Fenced code blocks with language identifiers are highlighted with Shiki:
@@ -140,6 +153,31 @@ const outputs = ['pdf', 'png', 'pptx'];
 ````
 
 Code highlighting is carried through PDF, PNG, and PPTX output.
+
+## LaTeX Math
+
+DeckDown supports display-style LaTeX math blocks fenced with `$$`:
+
+```markdown
+$$
+\int_0^1 x^2 \\, dx
+$$
+```
+
+Math is rendered into the preview and carried through PDF, PNG, and PPTX export.
+
+## Mermaid Diagrams
+
+DeckDown supports Mermaid diagrams through fenced `mermaid` code blocks:
+
+````markdown
+```mermaid
+graph TD
+  Draft --> Review --> Export
+```
+````
+
+Mermaid diagrams are rendered into the slide preview and exported as part of the deck outputs.
 
 ## Images
 
